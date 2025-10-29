@@ -1,14 +1,3 @@
-com\livecommerce\order\service\OrderService.class
 com\livecommerce\order\client\ProductClient$ProductDto.class
-com\livecommerce\order\service\impl\OrderServiceImpl.class
-com\livecommerce\order\domain\Order.class
-com\livecommerce\order\domain\OrderItem$OrderItemBuilder.class
 com\livecommerce\order\OrderServiceApplication.class
-com\livecommerce\order\request\OrderRequest$OrderRequestBuilder.class
 com\livecommerce\order\client\ProductClient.class
-com\livecommerce\order\repository\OrderRepository.class
-com\livecommerce\order\domain\Order$OrderBuilder.class
-com\livecommerce\order\controller\OrderController.class
-com\livecommerce\order\domain\OrderStatus.class
-com\livecommerce\order\request\OrderRequest.class
-com\livecommerce\order\domain\OrderItem.class

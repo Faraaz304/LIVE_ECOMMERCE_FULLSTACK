@@ -33,5 +33,19 @@ databaseChangeLog:
                     nullable: false
               - column:
                   name: created_at
+                  type: tValue: false
+              - column:
+                  name: stock
+                  type: int
+                  defaultValue: 0
+              - column:
+                  name: image_url
+                  type: varchar(500)
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: updated_at
                   type: timestamp
                   defaultValueComputed: CURRENT_TIMESTAMP

@@ -33,7 +33,7 @@ public class OrderController {
 
     @PutMapping("/{orderId}/status")
     public ResponseEntity<Order> updateOrderStatus(@PathVariable UUID orderId,
-                                                   @RequestParam OrderStatus status) {
+            @RequestParam OrderStatus status) {
         return ResponseEntity.ok(orderService.updateOrderStatus(orderId, status));
     }
 }

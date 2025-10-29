@@ -1,8 +1,1 @@
-com\livecommerce\product\domain\Product.class
-com\livecommerce\product\service\ProductService.class
-com\livecommerce\product\domain\Product$ProductBuilder.class
-com\livecommerce\product\repository\ProductRepository.class
 com\livecommerce\product\ProductServiceApplication.class
-com\livecommerce\product\config\WebConfig.class
-com\livecommerce\product\service\impl\ProductServiceImpl.class
-com\livecommerce\product\api\ProductController.class
