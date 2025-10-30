@@ -1,4 +1,4 @@
-package com.livecommerce.product.service.impl;
+package com.livecommerce.product.service.Impl;
 
 import com.livecommerce.product.domain.Product;
 import com.livecommerce.product.repository.ProductRepository;
