@@ -1,25 +1,61 @@
 "use client";
 import { useState } from "react";
+import { auth } from "../../../lib/api"; // Import the auth object from your api.js
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
-    name: "",
+    name: "", // This will map to 'username' in the API call
     email: "",
     password: "",
     confirmPassword: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
 
-  const handleChange = (e) =>
+  const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
+    setError(null); // Clear error on change
+    setSuccess(false); // Clear success on change
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+    setSuccess(false);
+
     if (form.password !== form.confirmPassword) {
-      alert("Passwords do not match!");
+      setError("Passwords do not match!");
       return;
     }
-    // Example call — replace with your real endpoint
-    console.log("Registration data:", form);
+
+    setLoading(true);
+    try {
+      // Prepare the payload to match your backend's expected format
+      const payload = {
+        username: form.name, // Map form 'name' to API 'username'
+        email: form.email,
+        password: form.password,
+      };
+
+      const data = await auth.register(payload); // Call the register function from lib/api.js
+      console.log("Registration successful:", data);
+      setSuccess(true);
+      // Optionally redirect user or clear form
+      setForm({
+        name: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
+      // Example: Redirect to login page after successful registration
+      // window.location.href = "/login";
+    } catch (err) {
+      console.error("Registration failed:", err.message);
+      setError(err.message || "Failed to register. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -32,6 +68,20 @@ export default function RegisterPage() {
           Create an Account
         </h2>
 
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded border border-red-200">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="mb-4 p-3 bg-green-100 text-green-700 rounded border border-green-200">
+            Registration successful! You can now{" "}
+            <a href="/login" className="text-[var(--color-secondary)] underline">
+              Login
+            </a>.
+          </div>
+        )}
+
         <div className="mb-4">
           <label className="block text-sm font-medium mb-1 text-[var(--color-text)]">
             Name
@@ -41,8 +91,9 @@ export default function RegisterPage() {
             name="name"
             value={form.name}
             onChange={handleChange}
-            className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+            className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] dark:bg-gray-700 dark:text-white dark:border-gray-600"
             required
+            disabled={loading}
           />
         </div>
 
@@ -55,8 +106,9 @@ export default function RegisterPage() {
             name="email"
             value={form.email}
             onChange={handleChange}
-            className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+            className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] dark:bg-gray-700 dark:text-white dark:border-gray-600"
             required
+            disabled={loading}
           />
         </div>
 
@@ -69,8 +121,9 @@ export default function RegisterPage() {
             name="password"
             value={form.password}
             onChange={handleChange}
-            className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+            className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] dark:bg-gray-700 dark:text-white dark:border-gray-600"
             required
+            disabled={loading}
           />
         </div>
 
@@ -83,16 +136,18 @@ export default function RegisterPage() {
             name="confirmPassword"
             value={form.confirmPassword}
             onChange={handleChange}
-            className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+            className="w-full border border-gray-300 p-2 rounded focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)] dark:bg-gray-700 dark:text-white dark:border-gray-600"
             required
+            disabled={loading}
           />
         </div>
 
         <button
           type="submit"
-          className="w-full py-2 rounded text-white bg-[var(--color-primary)] hover:opacity-90 transition"
+          className="w-full py-2 rounded text-white bg-[var(--color-primary)] hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={loading}
         >
-          Sign Up
+          {loading ? "Signing Up..." : "Sign Up"}
         </button>
 
         <p className="mt-4 text-center text-sm text-gray-500">
