@@ -1,10 +1,9 @@
 "use client";
 import { useState } from "react";
-import { auth } from "../../../lib/api"; // Import the auth object from your api.js
 
 export default function RegisterPage() {
   const [form, setForm] = useState({
-    name: "", // This will map to 'username' in the API call
+    name: "",
     email: "",
     password: "",
     confirmPassword: "",
@@ -15,8 +14,8 @@ export default function RegisterPage() {
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    setError(null); // Clear error on change
-    setSuccess(false); // Clear success on change
+    setError(null);
+    setSuccess(false);
   };
 
   const handleSubmit = async (e) => {
@@ -30,28 +29,32 @@ export default function RegisterPage() {
     }
 
     setLoading(true);
+
     try {
-      // Prepare the payload to match your backend's expected format
       const payload = {
-        username: form.name, // Map form 'name' to API 'username'
+        username: form.name,
         email: form.email,
         password: form.password,
       };
 
-      const data = await auth.register(payload); // Call the register function from lib/api.js
+      const res = await fetch("http://localhost:8084/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Registration failed");
+      }
+
       console.log("Registration successful:", data);
       setSuccess(true);
-      // Optionally redirect user or clear form
-      setForm({
-        name: "",
-        email: "",
-        password: "",
-        confirmPassword: "",
-      });
-      // Example: Redirect to login page after successful registration
-      // window.location.href = "/login";
+
+      // Clear form
+      setForm({ name: "", email: "", password: "", confirmPassword: "" });
     } catch (err) {
-      console.error("Registration failed:", err.message);
       setError(err.message || "Failed to register. Please try again.");
     } finally {
       setLoading(false);
@@ -78,7 +81,8 @@ export default function RegisterPage() {
             Registration successful! You can now{" "}
             <a href="/login" className="text-[var(--color-secondary)] underline">
               Login
-            </a>.
+            </a>
+            .
           </div>
         )}
 
@@ -144,8 +148,8 @@ export default function RegisterPage() {
 
         <button
           type="submit"
-          className="w-full py-2 rounded text-white bg-[var(--color-primary)] hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={loading}
+          className="w-full py-2 rounded text-white bg-[var(--color-primary)] hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? "Signing Up..." : "Sign Up"}
         </button>
