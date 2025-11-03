@@ -1,51 +1,3 @@
-// "use client";
-// import Link from "next/link";
-// import { usePathname } from "next/navigation";
-// import { useState } from "react";
-// import { Package, Calendar, Tv, Settings } from "lucide-react";
-// import { motion } from "framer-motion";
-
-// export default function Sidebar({ isOpen }) {
-//   const pathname = usePathname();
-
-//   const menuItems = [
-//     { name: "Products", icon: <Package size={20} />, href: "/product" },
-//     { name: "Reservation", icon: <Calendar size={20} />, href: "/reservation" },
-//     { name: "Stream", icon: <Tv size={20} />, href: "/stream" },
-//     { name: "Settings", icon: <Settings size={20} />, href: "/settings" },
-//   ];
-
-//   return (
-//     <motion.aside
-//       animate={{ x: isOpen ? 0 : -250 }}
-//       transition={{ duration: 0.3 }}
-//       className="bg-[var(--card)] text-[var(--foreground)] w-64 h-screen fixed md:static top-0 left-0 flex flex-col p-4 shadow-lg border-r border-[var(--border)]"
-//     >
-//       <h2 className="text-2xl font-semibold mb-8 text-center text-[var(--primary)]">
-//         Dashboard
-//       </h2>
-
-//       <nav className="flex flex-col gap-2">
-//         {menuItems.map((item) => (
-//           <Link
-//             key={item.name}
-//             href={item.href}
-//             className={`flex items-center gap-3 px-4 py-2 rounded-lg transition-colors ${
-//               pathname === item.href
-//                 ? "bg-[var(--primary)] text-[var(--primary-foreground)]"
-//                 : "hover:bg-[var(--secondary)] hover:text-[var(--secondary-foreground)]"
-//             }`}
-//           >
-//             {item.icon}
-//             <span>{item.name}</span>
-//           </Link>
-//         ))}
-//       </nav>
-//     </motion.aside>
-//   );
-// }
-
-
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -90,11 +42,7 @@ export default function Sidebar({ isOpen }) {
           <Link
             key={item.name}
             href={item.href}
-            className={`flex items-center gap-4 px-4 py-2.5 rounded-lg transition-all duration-200 ${
-              pathname === item.href
-                ? "bg-[var(--primary)] text-[var(--primary-foreground)] shadow-md"
-                : "hover:bg-[var(--secondary)] hover:text-[var(--secondary-foreground)]"
-            }`}
+            className="flex items-center gap-4 px-4 py-2.5 rounded-lg transition-all duration-200 hover:bg-[var(--secondary)] hover:text-[var(--secondary-foreground)]"
           >
             {item.icon}
             <span className="font-medium">{item.name}</span>
@@ -103,16 +51,16 @@ export default function Sidebar({ isOpen }) {
       </nav>
 
       <div className="mt-auto">
-         <div className="flex items-center gap-3 p-2 border-t border-[var(--border)]">
-            <img
-              src="https://i.pravatar.cc/40"
-              alt="user"
-              className="rounded-full w-10 h-10 border-2 border-[var(--border)]"
-            />
-            <div>
-                <p className="text-sm font-semibold">John Doe</p>
-                <p className="text-xs text-[var(--muted-foreground)]">johndoe@example.com</p>
-            </div>
+        <div className="flex items-center gap-3 p-2 border-t border-[var(--border)]">
+          <img
+            src="https://i.pravatar.cc/40"
+            alt="user"
+            className="rounded-full w-10 h-10 border-2 border-[var(--border)]"
+          />
+          <div>
+            <p className="text-sm font-semibold">John Doe</p>
+            <p className="text-xs text-[var(--muted-foreground)]">johndoe@example.com</p>
+          </div>
         </div>
       </div>
     </motion.aside>
