@@ -1,12 +1,11 @@
-import Image from "next/image";
-import LoginPage from "./(auth)/login/page";
-import RegisterPage from "./(auth)/register/page";
+"use client"
+import { useState } from "react";
+
 
 export default function Home() {
+
   return (
     <>
-    {/* <LoginPage/> */}
-    <RegisterPage/>
     </>
    
   );
