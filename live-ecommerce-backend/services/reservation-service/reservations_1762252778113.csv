@@ -1,0 +1,4 @@
+Booking ID,Customer,Phone,Product,People,Status,Start Time,End Time
+RES-D5942E,John Doe,+1234567890,Premium Package,4,confirmed,2024-12-01T14:00,2024-12-01T16:00
+RES-50BDBB,John Doe,+1234567890,shose,4,Pending,null,null
+RES-AEB5B0,Dilshad,+0987654321,Mobile Phone,7,Pending,2025-12-01T14:00,2025-12-01T16:00

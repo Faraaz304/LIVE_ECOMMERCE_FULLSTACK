@@ -1,5 +1,6 @@
 server:
   port: 8222
+
 spring:
   cloud:
     gateway:
@@ -10,11 +11,11 @@ spring:
         - id: auth-service
           uri: lb://AUTH-SERVICE
           predicates:
-            - Path=//api/auth/**
+            - Path=/api/auth/**
         - id: compliance-service
           uri: lb://COMPLIANCE-SERVICE
           predicates:
-            - Path=//kyc/**
+            - Path=/kyc/**
         - id: order-service
           uri: lb://ORDER-SERVICE
           predicates:
@@ -23,3 +24,7 @@ spring:
           uri: lb://PRODUCT-SERVICE
           predicates:
             - Path=/api/products/**
+        - id: reservation-service
+          uri: lb://RESERVATION-SERVICE
+          predicates:
+            - Path=/api/reservations/**
