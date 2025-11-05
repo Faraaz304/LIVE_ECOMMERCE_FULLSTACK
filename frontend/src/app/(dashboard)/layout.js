@@ -15,7 +15,7 @@ export default function DashboardLayout({ children }) {
     <div className="flex h-screen overflow-hidden bg-[var(--background)] text-[var(--foreground)] transition-all">
       <Sidebar isOpen={isOpen} />
       <div className="flex flex-col flex-1">
-        <Navbar toggleSidebar={toggleSidebar} />
+        {/* <Navbar toggleSidebar={toggleSidebar} /> */}
         {/* The 'children' prop is where your page content will be rendered */}
         <main className="flex-1 overflow-y-auto">
           {children}
