@@ -21,10 +21,6 @@ const ProductCard = ({ product, selectedProductIds, handleCheckboxChange }) => {
     alert(`Delete product ${product.name} (functionality not implemented)`);
   };
 
-  const handleDuplicateClick = (e) => {
-    e.stopPropagation(); // Prevent card click
-    alert(`Duplicate product ${product.name} (functionality not implemented)`);
-  };
 
   return (
     <div
@@ -66,12 +62,6 @@ const ProductCard = ({ product, selectedProductIds, handleCheckboxChange }) => {
           </h3>
           <div className="text-2xl font-bold text-[#667eea] mb-2">₹{product.price}</div>
           <div className="flex gap-2 mb-3 text-xs">
-            <span className="bg-gray-100 py-1 px-2 rounded-md text-[#6b7280] font-medium">
-              {product.karat}
-            </span>
-            <span className="bg-gray-100 py-1 px-2 rounded-md text-[#6b7280] font-medium">
-              {product.weight}
-            </span>
           </div>
           <div className="flex justify-between items-center text-sm text-[#6b7280] mb-3">
             <span>
@@ -83,9 +73,6 @@ const ProductCard = ({ product, selectedProductIds, handleCheckboxChange }) => {
               >
                 {product.stock}
               </span>
-            </span>
-            <span className="text-xs bg-gray-100 py-1 px-2 rounded-md text-[#6b7280]">
-              {product.sku}
             </span>
           </div>
         </div>
@@ -99,12 +86,7 @@ const ProductCard = ({ product, selectedProductIds, handleCheckboxChange }) => {
         >
           ✏️ Edit
         </button>
-        <button
-          onClick={handleDuplicateClick}
-          className="p-2 rounded-lg cursor-pointer text-xl text-[#6b7280] transition-all hover:bg-gray-100"
-        >
-          📋
-        </button>
+        
         <button
           onClick={handleDeleteClick}
           className="p-2 rounded-lg cursor-pointer text-xl text-[#6b7280] transition-all hover:bg-gray-100"
