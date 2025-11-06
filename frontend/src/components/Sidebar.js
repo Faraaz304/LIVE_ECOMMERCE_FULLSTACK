@@ -18,9 +18,9 @@ export default function Sidebar({ isOpen }) {
   const menuItems = [
     { name: "Dashboard", icon: <LayoutDashboard size={20} />, href: "/dashboard" },
     { name: "Products", icon: <Package size={20} />, href: "/product" },
+    { name: "Reservation", icon: <Calendar size={20} />, href: "/reservation" },
     { name: "Orders", icon: <ShoppingCart size={20} />, href: "/orders" },
     { name: "Customers", icon: <Users size={20} />, href: "/customers" },
-    { name: "Reservation", icon: <Calendar size={20} />, href: "/reservation" },
     { name: "Stream", icon: <Tv size={20} />, href: "/stream" },
     { name: "Settings", icon: <Settings size={20} />, href: "/settings" },
   ];
