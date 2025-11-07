@@ -16,10 +16,6 @@ const ProductCard = ({ product, selectedProductIds, handleCheckboxChange }) => {
     router.push(`/product/edit/${product.id}`);
   };
 
-  const handleDeleteClick = (e) => {
-    e.stopPropagation(); // Prevent card click
-    alert(`Delete product ${product.name} (functionality not implemented)`);
-  };
 
 
   return (
@@ -35,17 +31,7 @@ const ProductCard = ({ product, selectedProductIds, handleCheckboxChange }) => {
           ) : (
             product.icon // Fallback to emoji icon if no image URL
           )}
-          <div className="absolute top-3 left-3">
-            <input
-              type="checkbox"
-              className="w-5 h-5 rounded-md cursor-pointer accent-[#667eea]"
-              checked={selectedProductIds.has(product.id)}
-              onChange={(e) => {
-                e.stopPropagation(); // Prevent card click when checkbox is clicked
-                handleCheckboxChange(product.id, e.target.checked);
-              }}
-            />
-          </div>
+         
           <div
             className={`absolute top-3 right-3 py-1 px-3 rounded-full text-xs font-semibold ${
               product.status === 'active'
@@ -87,12 +73,6 @@ const ProductCard = ({ product, selectedProductIds, handleCheckboxChange }) => {
           ✏️ Edit
         </button>
         
-        <button
-          onClick={handleDeleteClick}
-          className="p-2 rounded-lg cursor-pointer text-xl text-[#6b7280] transition-all hover:bg-gray-100"
-        >
-          🗑️
-        </button>
       </div>
     </div>
   );
