@@ -102,8 +102,6 @@ const EditProductPage = () => {
     }
   };
 
-  // Keep setPrimaryImage and removeImage, though in this simplified single-image model,
-  // setPrimaryImage mostly ensures the only image is primary, and removeImage clears it.
   const setPrimaryImage = (index) => {
     setImages((prevImages) =>
       prevImages.map((img, i) => ({ ...img, isPrimary: i === index }))
@@ -124,7 +122,6 @@ const EditProductPage = () => {
   // --- Preview states ---
   const previewName = formData.name || 'Product Name';
   const previewPrice = formData.price ? `₹${new Intl.NumberFormat('en-IN').format(formData.price)}` : '₹0.00';
-  // Removed salePrice, costPrice, gstRate, tags, productWeight, productKarat, productPurity from preview
   const previewStatus = formData.live && formData.stock > 0 ? 'Active' : 'Inactive';
   const primaryImageUrl = images.find(img => img.isPrimary)?.url || '';
   const previewDescriptionSnippet = formData.description ? formData.description.substring(0, 150) + (formData.description.length > 150 ? '...' : '') : 'No description provided.';
@@ -209,11 +206,6 @@ const EditProductPage = () => {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleDuplicateProduct = () => {
-    console.log('Duplicating product:', routeProductId);
-    alert('Duplicate product functionality not implemented.');
   };
 
   const handleDeleteProduct = async () => {

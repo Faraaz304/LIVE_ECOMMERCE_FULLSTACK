@@ -119,7 +119,6 @@ const ProductsPage = () => {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold text-[#111827]">Products</h1>
-          <p className="text-base text-[#6b7280] mt-1">Manage your jewelry catalog</p>
         </div>
         <button
           className="py-3 px-6 text-white rounded-lg text-base font-semibold cursor-pointer flex items-center gap-2 transition-all duration-300 hover:-translate-y-px"
