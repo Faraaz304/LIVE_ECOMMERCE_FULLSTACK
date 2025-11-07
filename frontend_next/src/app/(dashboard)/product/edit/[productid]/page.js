@@ -5,8 +5,6 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 
-// NO METADATA EXPORT IN THIS FILE, as requested.
-
 const EditProductPage = () => {
   const router = useRouter();
   const params = useParams();
@@ -165,17 +163,11 @@ const EditProductPage = () => {
       category: formData.category,
       live: formData.live,
       stock: parseInt(formData.stock),
-      // Only include fields that your API actually expects for PUT
-      // Based on your JSON, SKU, Barcode, etc. are not updated via the product JSON string
-      // If backend requires them for PUT, ensure they are in formData and added here.
-      // For this example, sticking to the "iPhone 16" JSON you provided for PUT.
     };
 
     const formDataToSend = new FormData();
     formDataToSend.append('product', JSON.stringify(productPayload));
 
-    // Only append the 'image' field if a new file was selected as primary (has 'file' property)
-    // If an existing image URL is primary, we don't send a new file; backend retains old image.
     if (primaryImageObject.file) { // Check if it's a new file, not just an existing URL
       formDataToSend.append('image', primaryImageObject.file);
     }
