@@ -19,11 +19,13 @@ const ReservationsPage = () => {
         if (!res.ok) throw new Error('Failed to fetch reservations');
         const data = await res.json();
 
-        // Convert data for display
+        // Format data
         const formatted = data.map((item) => ({
           ...item,
           date: item.startTime ? new Date(item.startTime).toLocaleDateString() : '-',
-          time: item.startTime ? new Date(item.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-',
+          time: item.startTime
+            ? new Date(item.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            : '-',
         }));
 
         setReservations(formatted);
@@ -69,10 +71,21 @@ const ReservationsPage = () => {
     }
   };
 
-  const isAllSelected = displayedReservations.length > 0 && selectedReservations.size === displayedReservations.length;
+  const isAllSelected =
+    displayedReservations.length > 0 && selectedReservations.size === displayedReservations.length;
 
   const handleBulkAction = (action) => {
     alert(`${action} clicked for ${selectedReservations.size} reservations`);
+  };
+
+  // Update status on frontend only
+  const updateStatus = (id, newStatus) => {
+    setDisplayedReservations((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
+    );
+    setReservations((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, status: newStatus } : r))
+    );
   };
 
   const getStatusBadgeClass = (status) => {
@@ -107,7 +120,7 @@ const ReservationsPage = () => {
             }}
             onMouseEnter={(e) => (e.currentTarget.style.boxShadow = 'var(--tw-shadow)')}
             onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
-            onClick={() => alert('Calendar View Clicked!')}
+            onClick={() => (window.location.href = '/reservation/calendar')}
           >
             <span>📅</span>
             Calendar View
@@ -117,14 +130,16 @@ const ReservationsPage = () => {
 
       {/* Table Container */}
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        {/* Table Header with Bulk Actions */}
+        {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-6 border-b border-[#e5e7eb] gap-3">
           <div className="text-lg font-semibold text-[#111827]">
             {displayedReservations.length} Reservations for {activeTab}
           </div>
           {bulkActionsVisible && (
             <div className="flex gap-3 items-center">
-              <span className="text-sm text-[#6b7280]">{selectedReservations.size} selected</span>
+              <span className="text-sm text-[#6b7280]">
+                {selectedReservations.size} selected
+              </span>
               <button
                 className="py-2 px-4 bg-white text-[#667eea] border-2 border-[#667eea] rounded-lg text-sm font-semibold cursor-pointer transition-all hover:bg-[#667eea]/[0.05]"
                 onClick={() => handleBulkAction('Send Reminder')}
@@ -154,56 +169,97 @@ const ReservationsPage = () => {
                     onChange={handleToggleAllReservations}
                   />
                 </th>
-                <th className="py-4 px-4 text-left text-sm font-semibold text-[#374151]">Booking ID</th>
-                <th className="py-4 px-4 text-left text-sm font-semibold text-[#374151]">Customer</th>
-                <th className="py-4 px-4 text-left text-sm font-semibold text-[#374151]">Date & Time</th>
-                <th className="py-4 px-4 text-left text-sm font-semibold text-[#374151]">Product</th>
-                <th className="py-4 px-4 text-left text-sm font-semibold text-[#374151]">People</th>
-                <th className="py-4 px-4 text-left text-sm font-semibold text-[#374151]">Status</th>
-                <th className="py-4 px-4 text-left text-sm font-semibold text-[#374151]">Actions</th>
+                <th className="py-4 px-4 text-left text-sm font-semibold text-[#374151]">
+                  Booking ID
+                </th>
+                <th className="py-4 px-4 text-left text-sm font-semibold text-[#374151]">
+                  Customer
+                </th>
+                <th className="py-4 px-4 text-left text-sm font-semibold text-[#374151]">
+                  Date & Time
+                </th>
+                <th className="py-4 px-4 text-left text-sm font-semibold text-[#374151]">
+                  Product
+                </th>
+                <th className="py-4 px-4 text-left text-sm font-semibold text-[#374151]">
+                  People
+                </th>
+                <th className="py-4 px-4 text-left text-sm font-semibold text-[#374151]">
+                  Status
+                </th>
+                <th className="py-4 px-4 text-left text-sm font-semibold text-[#374151]">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
               {displayedReservations.length === 0 ? (
                 <tr>
-                  <td colSpan="8" className="text-center py-16 text-[#6b7280] text-base">
+                  <td
+                    colSpan="8"
+                    className="text-center py-16 text-[#6b7280] text-base"
+                  >
                     No reservations found.
                   </td>
                 </tr>
               ) : (
                 displayedReservations.map((reservation) => (
-                  <tr key={reservation.id} className="border-b border-[#e5e7eb] hover:bg-gray-50 last:border-b-0">
+                  <tr
+                    key={reservation.id}
+                    className="border-b border-[#e5e7eb] hover:bg-gray-50 last:border-b-0"
+                  >
                     <td className="py-4 px-4">
                       <input
                         type="checkbox"
                         className="w-4.5 h-4.5 rounded-sm cursor-pointer accent-[#667eea]"
                         checked={selectedReservations.has(reservation.id)}
-                        onChange={(e) => handleToggleReservation(reservation.id, e.target.checked)}
+                        onChange={(e) =>
+                          handleToggleReservation(reservation.id, e.target.checked)
+                        }
                       />
                     </td>
-                    <td className="py-4 px-4 font-semibold text-[#111827]">{reservation.bookingId}</td>
+                    <td className="py-4 px-4 font-semibold text-[#111827]">
+                      {reservation.bookingId}
+                    </td>
                     <td className="py-4 px-4">
                       <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full bg-[#667eea] text-white flex items-center justify-center font-semibold text-sm">
                           {reservation.customerName
-                            ? reservation.customerName.split(' ').map((n) => n[0]).join('')
+                            ? reservation.customerName
+                                .split(' ')
+                                .map((n) => n[0])
+                                .join('')
                             : '?'}
                         </div>
                         <div>
-                          <div className="font-semibold text-[#111827]">{reservation.customerName}</div>
-                          <div className="text-[#6b7280] text-xs flex items-center gap-1">📞 {reservation.customerPhone}</div>
+                          <div className="font-semibold text-[#111827]">
+                            {reservation.customerName}
+                          </div>
+                          <div className="text-[#6b7280] text-xs flex items-center gap-1">
+                            📞 {reservation.customerPhone}
+                          </div>
                         </div>
                       </div>
                     </td>
                     <td className="py-4 px-4">
                       <strong>{reservation.date}</strong>
                       <br />
-                      <span className="text-[#6b7280] text-xs">{reservation.time}</span>
+                      <span className="text-[#6b7280] text-xs">
+                        {reservation.time}
+                      </span>
                     </td>
-                    <td className="py-4 px-4 font-medium text-[#374151]">{reservation.productName}</td>
-                    <td className="py-4 px-4 font-semibold text-[#374151]">{reservation.people}</td>
+                    <td className="py-4 px-4 font-medium text-[#374151]">
+                      {reservation.productName}
+                    </td>
+                    <td className="py-4 px-4 font-semibold text-[#374151]">
+                      {reservation.people}
+                    </td>
                     <td className="py-4 px-4">
-                      <span className={`py-1 px-3 rounded-full text-xs font-semibold ${getStatusBadgeClass(reservation.status)}`}>
+                      <span
+                        className={`py-1 px-3 rounded-full text-xs font-semibold ${getStatusBadgeClass(
+                          reservation.status
+                        )}`}
+                      >
                         {reservation.status}
                       </span>
                     </td>
@@ -219,13 +275,13 @@ const ReservationsPage = () => {
                           <>
                             <button
                               className="py-1.5 px-3 bg-[#10b981] text-white rounded-lg text-xs font-semibold hover:bg-[#059669]"
-                              onClick={() => alert(`Confirm ${reservation.id}`)}
+                              onClick={() => updateStatus(reservation.id, 'Confirmed')}
                             >
                               ✓ Confirm
                             </button>
                             <button
                               className="py-1.5 px-3 bg-[#ef4444] text-white rounded-lg text-xs font-semibold hover:bg-[#dc2626]"
-                              onClick={() => alert(`Cancel ${reservation.id}`)}
+                              onClick={() => updateStatus(reservation.id, 'Cancelled')}
                             >
                               ✗
                             </button>
@@ -243,7 +299,8 @@ const ReservationsPage = () => {
         {/* Pagination */}
         <div className="flex flex-col sm:flex-row justify-between items-center p-6 border-t border-[#e5e7eb] gap-4">
           <div className="text-sm text-[#6b7280]">
-            Showing <strong>{displayedReservations.length}</strong> of <strong>{reservations.length}</strong> reservations
+            Showing <strong>{displayedReservations.length}</strong> of{' '}
+            <strong>{reservations.length}</strong> reservations
           </div>
           <div className="flex gap-2 items-center">
             <span className="text-sm text-[#6b7280]">Rows per page:</span>
@@ -252,11 +309,18 @@ const ReservationsPage = () => {
               <option>20</option>
               <option>50</option>
             </select>
-            <button className="py-1.5 px-3 border border-[#d1d5db] rounded-lg bg-white text-[#374151] text-sm opacity-50 cursor-not-allowed" disabled>
+            <button
+              className="py-1.5 px-3 border border-[#d1d5db] rounded-lg bg-white text-[#374151] text-sm opacity-50 cursor-not-allowed"
+              disabled
+            >
               ‹
             </button>
-            <button className="py-1.5 px-3 border border-[#667eea] bg-[#667eea] text-white rounded-lg text-sm">1</button>
-            <button className="py-1.5 px-3 border border-[#d1d5db] rounded-lg bg-white text-[#374151] text-sm hover:bg-gray-50">›</button>
+            <button className="py-1.5 px-3 border border-[#667eea] bg-[#667eea] text-white rounded-lg text-sm">
+              1
+            </button>
+            <button className="py-1.5 px-3 border border-[#d1d5db] rounded-lg bg-white text-[#374151] text-sm hover:bg-gray-50">
+              ›
+            </button>
           </div>
         </div>
       </div>
