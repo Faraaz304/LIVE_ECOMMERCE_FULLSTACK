@@ -1,33 +1,24 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useDelete } from '@/hooks/useDelete';
+import { useFetchAll } from '@/hooks/useFetchAll';
 
 const ProductDetailPage = () => {
   const router = useRouter();
   const params = useParams();
   const { productid } = params;
 
-  const [product, setProduct] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    const fetchProduct = async () => {
-      try {
-        const response = await fetch(`http://localhost:8082/api/products/${productid}`);
-        if (!response.ok) throw new Error('Failed to fetch product');
-        const data = await response.json();
-        setProduct(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // Fetch single product using the hook
+  const productUrl = productid ? `http://localhost:8082/api/products/${productid}` : null;
+  const { data: product, loading, error } = useFetchAll(productUrl);
 
-    if (productid) fetchProduct();
-  }, [productid]);
+  const { deleteItem, loading: deleteLoading, error: deleteError } = useDelete(
+    'http://localhost:8082/api/products'
+  );
 
   if (loading) {
     return (
@@ -71,18 +62,15 @@ const ProductDetailPage = () => {
 
   const handleDeleteProduct = async () => {
     if (confirm(`Are you sure you want to delete "${product.name}"?`)) {
+      setIsDeleting(true);
       try {
-        const response = await fetch(`http://localhost:8082/api/products/${productid}`, {
-          method: 'DELETE',
-        });
-        if (response.ok) {
-          alert('Product deleted successfully');
-          router.push('/product');
-        } else {
-          alert('Failed to delete product');
-        }
+        await deleteItem(productid);
+        alert('Product deleted successfully');
+        router.push('/product');
       } catch (err) {
-        alert('Error deleting product');
+        console.error('Error deleting product:', err);
+      } finally {
+        setIsDeleting(false);
       }
     }
   };
@@ -117,21 +105,30 @@ const ProductDetailPage = () => {
         <div className="flex flex-wrap gap-3">
           <button
             onClick={handleEditProduct}
-            className="py-3 px-5 text-white rounded-lg text-sm font-semibold cursor-pointer flex items-center gap-2 transition-all hover:-translate-y-px"
+            className="py-3 px-5 text-white rounded-lg text-sm font-semibold cursor-pointer flex items-center gap-2 transition-all hover:-translate-y-px disabled:opacity-70 disabled:cursor-not-allowed"
             style={{
               background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
             }}
+            disabled={isDeleting || deleteLoading}
           >
             ✏️ Edit
           </button>
           <button
             onClick={handleDeleteProduct}
-            className="py-3 px-5 bg-white text-[#ef4444] border-2 border-[#fecaca] rounded-lg text-sm font-semibold cursor-pointer flex items-center gap-2 transition-all hover:bg-[#fef2f2]"
+            className="py-3 px-5 bg-white text-[#ef4444] border-2 border-[#fecaca] rounded-lg text-sm font-semibold cursor-pointer flex items-center gap-2 transition-all hover:bg-[#fef2f2] disabled:opacity-70 disabled:cursor-not-allowed"
+            disabled={isDeleting || deleteLoading}
           >
-            🗑️ Delete
+            {deleteLoading ? '⏳' : '🗑️'} {deleteLoading ? 'Deleting...' : 'Delete'}
           </button>
         </div>
       </div>
+
+      {/* Error message from delete operation */}
+      {deleteError && (
+        <div className="bg-[#fef2f2] border border-[#fecaca] text-[#dc2626] rounded-lg p-3 mb-4 text-sm">
+          ❌ {deleteError}
+        </div>
+      )}
 
       {/* Main Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6 mb-6">

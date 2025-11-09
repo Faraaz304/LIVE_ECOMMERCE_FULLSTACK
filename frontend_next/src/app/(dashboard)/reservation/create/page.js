@@ -6,11 +6,13 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { CalendarPlus, Phone, User, Package, Users, Info, Bell, Check } from 'lucide-react';
+import { useCreate } from '@/hooks/useCreate';
 
 // NO METADATA EXPORT IN THIS FILE, as requested.
 
 const CreateReservationPage = () => {
   const router = useRouter();
+  const { createItem, loading, error: createError } = useCreate();
 
   // --- ORIGINAL STATE FOR API PAYLOAD (PRESERVED) ---
   const [customerName, setCustomerName] = useState('');
@@ -44,7 +46,7 @@ const CreateReservationPage = () => {
     }
   };
 
-  // --- ORIGINAL handleSubmit function (PRESERVED) ---
+  // --- UPDATED handleSubmit function (USING HOOK) ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitError(null);
@@ -53,7 +55,6 @@ const CreateReservationPage = () => {
     // Basic validation matching the original logic
     if (!customerName || !customerPhone || !productName || !startTime || !endTime) {
       setSubmitError('Please fill in all required fields.');
-      setIsSubmitting(false);
       return;
     }
 
@@ -76,25 +77,15 @@ const CreateReservationPage = () => {
     console.log('Submitting to API:', newReservationData);
 
     try {
-      const response = await fetch('http://localhost:8088/api/reservations', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newReservationData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'An unknown error occurred.' }));
-        throw new Error(errorData.message || `API Error: ${response.status} ${response.statusText}`);
-      }
-
-      const result = await response.json();
+      const result = await createItem(
+        'http://localhost:8088/api/reservations',
+        newReservationData
+      );
       console.log('API Response:', result);
 
       setSubmitSuccess(true);
       alert('Reservation created successfully!');
-      router.push('/reservation');
+      setTimeout(() => router.push('/reservation'), 1500);
 
     } catch (err) {
       console.error('Error creating reservation:', err);
@@ -159,7 +150,7 @@ const CreateReservationPage = () => {
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
                 required
-                disabled={isSubmitting}
+                disabled={isSubmitting || loading}
               />
               <span className="text-xs text-[#6b7280]">First and last name</span>
             </div>
@@ -177,7 +168,7 @@ const CreateReservationPage = () => {
                   value={customerPhone}
                   onChange={(e) => setCustomerPhone(e.target.value)}
                   required
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || loading}
                 />
               </div>
               <span className="text-xs text-[#6b7280]">10-digit mobile number</span>
@@ -196,7 +187,7 @@ const CreateReservationPage = () => {
                   value={productName}
                   onChange={(e) => setProductName(e.target.value)}
                   required
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || loading}
                 />
               </div>
               <span className="text-xs text-[#6b7280]">Product customer is interested in</span>
@@ -214,7 +205,7 @@ const CreateReservationPage = () => {
                 min="1"
                 max="10"
                 required
-                disabled={isSubmitting}
+                disabled={isSubmitting || loading}
               />
               <span className="text-xs text-[#6b7280]">How many people will visit</span>
             </div>
@@ -247,7 +238,7 @@ const CreateReservationPage = () => {
                 value={startTime}
                 onChange={(e) => setStartTime(e.target.value)}
                 required
-                disabled={isSubmitting}
+                disabled={isSubmitting || loading}
               />
               <span className="text-xs text-[#6b7280]">Choose start date and time</span>
             </div>
@@ -262,7 +253,7 @@ const CreateReservationPage = () => {
                 value={endTime}
                 onChange={(e) => setEndTime(e.target.value)}
                 required
-                disabled={isSubmitting}
+                disabled={isSubmitting || loading}
               />
               <span className="text-xs text-[#6b7280]">Choose end date and time</span>
             </div>
@@ -310,14 +301,14 @@ const CreateReservationPage = () => {
           </div>
         </motion.div>
 
-        {/* Display submission error */}
-        {submitError && (
+        {/* Display submission error (from hook or validation) */}
+        {(submitError || createError) && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="bg-[#fef2f2] border border-[#fecaca] text-[#dc2626] rounded-lg p-3 mt-4 text-center"
           >
-            {submitError}
+            {submitError || createError}
           </motion.div>
         )}
         {submitSuccess && (
@@ -337,7 +328,7 @@ const CreateReservationPage = () => {
               type="button"
               className="py-3 px-6 bg-white text-[#374151] border-2 border-[#e5e7eb] rounded-lg text-base font-semibold cursor-pointer transition-all hover:bg-gray-50 flex items-center justify-center"
               onClick={() => router.push('/reservation')}
-              disabled={isSubmitting}
+              disabled={isSubmitting || loading}
             >
               Cancel
             </button>
@@ -350,15 +341,15 @@ const CreateReservationPage = () => {
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 boxShadow: '0 0px 0px rgba(0,0,0,0)',
                 '--tw-shadow': '0 10px 30px rgba(102, 126, 234, 0.3)',
-                opacity: isSubmitting ? 0.7 : 1,
-                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                opacity: isSubmitting || loading ? 0.7 : 1,
+                cursor: isSubmitting || loading ? 'not-allowed' : 'pointer',
               }}
               onMouseEnter={(e) => (e.currentTarget.style.boxShadow = 'var(--tw-shadow)')}
               onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
-              disabled={isSubmitting}
+              disabled={isSubmitting || loading}
             >
               <Check className="w-5 h-5 mr-2" />
-              {isSubmitting ? 'Creating...' : 'Create Reservation'}
+              {isSubmitting || loading ? 'Creating...' : 'Create Reservation'}
             </motion.button>
           </div>
         </div>

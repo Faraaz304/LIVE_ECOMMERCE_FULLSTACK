@@ -1,9 +1,10 @@
-// app/product/edit/[productId]/page.js
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import Link from 'next/link';
+import React, { useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useFetchById } from '@/hooks/useFetchById';
+import useUpdateResource from '@/hooks/useUpdateResource';
+import { useDelete } from '@/hooks/useDelete';
 
 const EditProductPage = () => {
   const router = useRouter();
@@ -14,66 +15,54 @@ const EditProductPage = () => {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    price: '', // Number
-    stock: '', // Number
+    price: '',
+    stock: '',
     category: '',
-    live: true, // Maps to isVisible
+    live: true,
   });
 
   // State for images: can contain existing image URL or a new File object
-  const [images, setImages] = useState([]); // Array of { file?, url, isPrimary }
+  const [images, setImages] = useState([]);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  const [isLoading, setIsLoading] = useState(true); // For initial data fetch
-  const [fetchError, setFetchError] = useState(null); // For initial data fetch error
-  const [isSubmitting, setIsSubmitting] = useState(false); // For PUT operation
-  const [isDeleting, setIsDeleting] = useState(false); // For DELETE operation
-  const [submitSuccess, setSubmitSuccess] = useState(false); // For PUT operation success feedback
-  const [submitError, setSubmitError] = useState(null); // For PUT/DELETE operation error feedback
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
+  // Fetch product by ID using hook
+  const { data: product, loading: isLoading, error: fetchError, refetch } = useFetchById(
+    'http://localhost:8082/api/products',
+    routeProductId
+  );
 
-  // --- Data Fetching Effect for existing product ---
-  useEffect(() => {
-    const fetchProductData = async () => {
-      setIsLoading(true);
-      setFetchError(null);
-      try {
-        const response = await fetch(`http://localhost:8082/api/products/${routeProductId}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        
-        // Populate form data from fetched product, only for fields API provides
-        setFormData({
-          name: data.name || '',
-          description: data.description || '',
-          price: data.price || '',
-          stock: data.stock || '',
-          category: data.category || '',
-          live: data.live ?? true, // maps to isVisible
-        });
+  // Update product using hook
+  const { updateResource, loading: updateLoading, error: updateError } = useUpdateResource();
 
-        // Handle existing images: If imageUrl exists, set it as the primary image
-        if (data.imageUrl) {
-          setImages([{ url: `http://localhost:8082${data.imageUrl}`, isPrimary: true }]);
-        } else {
-            setImages([]); // No existing image
-        }
+  // Delete product using hook
+  const { deleteItem, loading: deleteLoading, error: deleteError } = useDelete(
+    'http://localhost:8082/api/products'
+  );
 
-      } catch (err) {
-        console.error('Failed to fetch product for editing:', err);
-        setFetchError(err.message || 'Failed to load product details for editing.');
-      } finally {
-        setIsLoading(false);
+  // Populate form when product data is loaded
+  React.useEffect(() => {
+    if (product) {
+      setFormData({
+        name: product.name || '',
+        description: product.description || '',
+        price: product.price || '',
+        stock: product.stock || '',
+        category: product.category || '',
+        live: product.live ?? true,
+      });
+
+      // Handle existing images
+      if (product.imageUrl) {
+        setImages([{ url: `http://localhost:8082${product.imageUrl}`, isPrimary: true }]);
+      } else {
+        setImages([]);
       }
-    };
-
-    if (routeProductId) {
-      fetchProductData();
     }
-  }, [routeProductId]);
-
+  }, [product]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -91,14 +80,12 @@ const EditProductPage = () => {
       alert('Some selected files exceed the 5MB limit and were not added.');
     }
 
-    // For editing, usually only one main image is updated.
-    // Replace existing images array with the new primary one if a valid file is uploaded.
     if (validFiles.length > 0) {
-        setImages([{
-            file: validFiles[0],
-            url: URL.createObjectURL(validFiles[0]),
-            isPrimary: true,
-        }]);
+      setImages([{
+        file: validFiles[0],
+        url: URL.createObjectURL(validFiles[0]),
+        isPrimary: true,
+      }]);
     }
   };
 
@@ -112,12 +99,11 @@ const EditProductPage = () => {
     setImages((prevImages) => {
       const updatedImages = prevImages.filter((_, i) => i !== index);
       if (prevImages[index]?.isPrimary && updatedImages.length > 0) {
-        updatedImages[0].isPrimary = true; // Set new primary if old one was removed
+        updatedImages[0].isPrimary = true;
       }
       return updatedImages;
     });
   };
-
 
   // --- Preview states ---
   const previewName = formData.name || 'Product Name';
@@ -127,31 +113,27 @@ const EditProductPage = () => {
   const previewDescriptionSnippet = formData.description ? formData.description.substring(0, 150) + (formData.description.length > 150 ? '...' : '') : 'No description provided.';
   const totalStock = formData.stock;
 
-
   const handleUpdateProduct = async (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
     setSubmitError(null);
     setSubmitSuccess(false);
 
     // Basic validation
     if (!formData.name || !formData.description || !formData.price || !formData.stock || !formData.category) {
       setSubmitError('Please fill in all required fields.');
-      setIsSubmitting(false);
       return;
     }
     if (images.length === 0) {
-        setSubmitError('Please upload at least one image.');
-        setIsSubmitting(false);
-        return;
+      setSubmitError('Please upload at least one image.');
+      return;
     }
     const primaryImageObject = images.find(img => img.isPrimary);
     if (!primaryImageObject) {
-        setSubmitError('Please set a primary image.');
-        setIsSubmitting(false);
-        return;
+      setSubmitError('Please set a primary image.');
+      return;
     }
 
+    setIsSubmitting(true);
 
     const productPayload = {
       name: formData.name,
@@ -162,44 +144,24 @@ const EditProductPage = () => {
       stock: parseInt(formData.stock),
     };
 
-    const formDataToSend = new FormData();
-    formDataToSend.append('product', JSON.stringify(productPayload));
+    const updatePayload = {
+      product: productPayload,
+    };
 
-    if (primaryImageObject.file) { // Check if it's a new file, not just an existing URL
-      formDataToSend.append('image', primaryImageObject.file);
+    if (primaryImageObject.file) {
+      updatePayload.image = primaryImageObject.file;
     }
 
     try {
-      const response = await fetch(`http://localhost:8082/api/products/${routeProductId}`, {
-        method: 'PUT',
-        body: formDataToSend,
-      });
-
-      const responseText = await response.text(); // Read as text first
-      let result = null;
-
-      if (responseText) {
-        try {
-          result = JSON.parse(responseText);
-        } catch (parseError) {
-          console.warn('Backend responded with non-JSON text on PUT:', responseText, parseError);
-        }
-      }
-
-      if (!response.ok) {
-        throw new Error(result?.message || `Server error: ${response.status} ${response.statusText}. Response body: ${responseText}`);
-      }
-
-      if (result) {
-        console.log('Product updated successfully:', result);
-      } else {
-        console.log('Product updated successfully (HTTP 200 OK), but no JSON data was returned in the response body.');
-      }
+      await updateResource(
+        `http://localhost:8082/api/products/${routeProductId}`,
+        updatePayload,
+        { isFormData: true }
+      );
 
       setSubmitSuccess(true);
       alert('Product updated successfully!');
-      router.push('/product'); // Redirect to products list page
-
+      setTimeout(() => router.push('/product'), 1500);
     } catch (err) {
       console.error('Failed to update product:', err);
       setSubmitError(err.message || 'Failed to update product. Please check your network and try again.');
@@ -209,40 +171,18 @@ const EditProductPage = () => {
   };
 
   const handleDeleteProduct = async () => {
-    setIsDeleting(true);
+    setShowDeleteModal(false);
     setSubmitError(null);
-    setShowDeleteModal(false); // Close the modal immediately
 
     try {
-      const response = await fetch(`http://localhost:8082/api/products/${routeProductId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorMessage = `Failed to delete product. Server responded with status ${response.status}.`;
-        try {
-          const errorJson = JSON.parse(errorText);
-          errorMessage = errorJson.message || errorMessage;
-        } catch (parseError) {
-          errorMessage = `${errorMessage} Body: ${errorText.substring(0, 100)}...`;
-        }
-        throw new Error(errorMessage);
-      }
-
-      console.log(`Product ${routeProductId} deleted successfully.`);
+      await deleteItem(routeProductId);
       alert(`Product "${formData.name || routeProductId}" deleted successfully!`);
-      router.push('/product'); // Redirect to products list page after deletion
-
+      router.push('/product');
     } catch (err) {
       console.error('Error deleting product:', err);
       setSubmitError(err.message || 'Failed to delete product.');
-      alert(`Error deleting product: ${err.message}`); // Provide immediate feedback
-    } finally {
-      setIsDeleting(false);
     }
   };
-
 
   if (isLoading) {
     return (
@@ -252,8 +192,7 @@ const EditProductPage = () => {
     );
   }
 
-  // Display fetch error if data couldn't be loaded initially
-  if (fetchError && !isSubmitting && !isDeleting) {
+  if (fetchError && !isSubmitting && !deleteLoading) {
     return (
       <div className="p-8 flex-1 flex items-center justify-center bg-[#f9fafb]">
         <p className="text-xl text-[#ef4444]">{fetchError}</p>
@@ -270,20 +209,15 @@ const EditProductPage = () => {
           <p className="text-base text-[#6b7280]">Product ID: {routeProductId}</p>
         </div>
         <div className="flex flex-wrap gap-3 sm:flex-row flex-col">
-          
-          
           <button
             onClick={() => setShowDeleteModal(true)}
             className="py-2.5 px-4 rounded-lg text-sm font-semibold cursor-pointer transition-all border-2 border-[#fecaca] bg-white text-[#ef4444] hover:bg-[#fef2f2] flex items-center gap-1"
-            disabled={isSubmitting || isDeleting}
+            disabled={isSubmitting || deleteLoading}
           >
-            {isDeleting ? 'Deleting...' : '🗑️ Delete'}
+            {deleteLoading ? 'Deleting...' : '🗑️ Delete'}
           </button>
         </div>
       </div>
-
-      {/* Performance Stats Banner (still using dummy data for this section as API didn't provide) */}
-     
 
       <form onSubmit={handleUpdateProduct}>
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
@@ -306,7 +240,7 @@ const EditProductPage = () => {
                   value={formData.name}
                   onChange={handleInputChange}
                   required
-                  disabled={isSubmitting || isDeleting}
+                  disabled={isSubmitting || deleteLoading}
                 />
                 <div className="text-xs text-[#9ca3af] text-right mt-1">
                   {formData.name.length} / 100 characters
@@ -325,7 +259,7 @@ const EditProductPage = () => {
                   value={formData.description}
                   onChange={handleInputChange}
                   required
-                  disabled={isSubmitting || isDeleting}
+                  disabled={isSubmitting || deleteLoading}
                 ></textarea>
                 <div className="text-xs text-[#6b7280] mt-1">
                   Write a compelling description that highlights the unique features of your product
@@ -345,9 +279,9 @@ const EditProductPage = () => {
                 {images.map((image, index) => (
                   <div key={index} className="relative aspect-square border-2 border-[#e5e7eb] rounded-lg overflow-hidden bg-gray-50">
                     {image.url ? (
-                        <img src={image.url} alt={`Product Image ${index + 1}`} className="w-full h-full object-cover" />
+                      <img src={image.url} alt={`Product Image ${index + 1}`} className="w-full h-full object-cover" />
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center text-4xl">🖼️</div> // Generic placeholder
+                      <div className="w-full h-full flex items-center justify-center text-4xl">🖼️</div>
                     )}
                     <div className="absolute top-2 right-2 flex gap-1">
                       <button
@@ -355,7 +289,7 @@ const EditProductPage = () => {
                         className="w-7 h-7 bg-white/90 rounded-md flex items-center justify-center text-xs"
                         title="Set as primary"
                         onClick={() => setPrimaryImage(index)}
-                        disabled={isSubmitting || isDeleting}
+                        disabled={isSubmitting || deleteLoading}
                       >
                         {image.isPrimary ? '⭐' : '☆'}
                       </button>
@@ -364,7 +298,7 @@ const EditProductPage = () => {
                         className="w-7 h-7 bg-white/90 rounded-md flex items-center justify-center text-xs"
                         title="Delete"
                         onClick={() => removeImage(index)}
-                        disabled={isSubmitting || isDeleting}
+                        disabled={isSubmitting || deleteLoading}
                       >
                         🗑️
                       </button>
@@ -376,26 +310,26 @@ const EditProductPage = () => {
                     )}
                   </div>
                 ))}
-                {images.length < 5 && ( // Allow adding new image only if less than 5
+                {images.length < 5 && (
                   <div
-                    className={`aspect-square border-2 border-dashed border-[#e5e7eb] rounded-lg bg-gray-50 flex items-center justify-center text-3xl text-[#9ca3af] cursor-pointer transition-all hover:border-[#667eea] hover:text-[#667eea] hover:bg-[#667eea]/[0.02] ${isSubmitting || isDeleting ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    onClick={() => !(isSubmitting || isDeleting) && document.getElementById('fileInput').click()}
+                    className={`aspect-square border-2 border-dashed border-[#e5e7eb] rounded-lg bg-gray-50 flex items-center justify-center text-3xl text-[#9ca3af] cursor-pointer transition-all hover:border-[#667eea] hover:text-[#667eea] hover:bg-[#667eea]/[0.02] ${isSubmitting || deleteLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    onClick={() => !(isSubmitting || deleteLoading) && document.getElementById('fileInput').click()}
                   >
                     +
                     <input
                       type="file"
                       id="fileInput"
                       accept="image/*"
-                      style={{ display: 'none' }} // Remove multiple as per current logic of one primary image at a time for update
+                      style={{ display: 'none' }}
                       onChange={handleImageUpload}
-                      disabled={isSubmitting || isDeleting}
+                      disabled={isSubmitting || deleteLoading}
                     />
                   </div>
                 )}
               </div>
-               <div className="text-xs text-[#9ca3af] mt-3 text-center">
-                  PNG, JPG, WebP up to 5MB each • Minimum 800x600px • Up to 5 images
-                </div>
+              <div className="text-xs text-[#9ca3af] mt-3 text-center">
+                PNG, JPG, WebP up to 5MB each • Minimum 800x600px • Up to 5 images
+              </div>
             </div>
 
             {/* Pricing */}
@@ -404,7 +338,7 @@ const EditProductPage = () => {
 
               <div className="mb-5">
                 <label className="block text-sm font-semibold text-[#374151] mb-2">
-                  Price (₹) <span className="text-[#ef4444]">*</span> {/* Changed from Regular Price to just Price */}
+                  Price (₹) <span className="text-[#ef4444]">*</span>
                 </label>
                 <input
                   type="number"
@@ -415,7 +349,7 @@ const EditProductPage = () => {
                   value={formData.price}
                   onChange={handleInputChange}
                   required
-                  disabled={isSubmitting || isDeleting}
+                  disabled={isSubmitting || deleteLoading}
                 />
                 <div className="text-xs text-[#6b7280] mt-1">Customer-facing price</div>
               </div>
@@ -438,7 +372,7 @@ const EditProductPage = () => {
                   value={formData.stock}
                   onChange={handleInputChange}
                   required
-                  disabled={isSubmitting || isDeleting}
+                  disabled={isSubmitting || deleteLoading}
                 />
                 <div className="text-xs text-[#6b7280] mt-1">Current available quantity</div>
               </div>
@@ -458,10 +392,10 @@ const EditProductPage = () => {
                   value={formData.category}
                   onChange={handleInputChange}
                   required
-                  disabled={isSubmitting || isDeleting}
+                  disabled={isSubmitting || deleteLoading}
                 >
                   <option value="">Select Category</option>
-                  <option value="electronics">Electronics</option> {/* Added for iPhone example */}
+                  <option value="electronics">Electronics</option>
                   <option value="Necklace Sets">Necklace Sets</option>
                   <option value="Rings">Rings</option>
                   <option value="Earrings">Earrings</option>
@@ -484,7 +418,7 @@ const EditProductPage = () => {
                 {primaryImageUrl ? (
                   <img src={primaryImageUrl} alt="Product Preview" className="w-full h-full object-cover rounded-lg" />
                 ) : (
-                  '📦' // Generic icon for preview if no image or specific category icon
+                  '📦'
                 )}
               </div>
               <h3 className="text-base font-semibold text-[#374151] mb-2">{previewName}</h3>
@@ -522,7 +456,7 @@ const EditProductPage = () => {
                       name="live"
                       checked={formData.live}
                       onChange={handleInputChange}
-                      disabled={isSubmitting || isDeleting}
+                      disabled={isSubmitting || deleteLoading}
                     />
                     <div
                       className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"
@@ -544,19 +478,17 @@ const EditProductPage = () => {
                 </ul>
               </div>
             </div>
-
-            {/* Product Analytics Card (Right Sidebar, using static data as API didn't provide) */}
-            
           </div>
         </div>
 
-        {/* Display submission/deletion error */}
-        {submitError && (
+        {/* Display errors */}
+        {(submitError || updateError || deleteError) && (
           <div className="bg-[#fef2f2] border border-[#fecaca] text-[#dc2626] rounded-lg p-3 mt-4 text-center">
-            {submitError}
+            {submitError || updateError || deleteError}
           </div>
         )}
-        {/* Display submission success */}
+
+        {/* Display success */}
         {submitSuccess && (
           <div className="bg-[#f0fdf4] border border-[#bbf7d0] text-[#15803d] rounded-lg p-3 mt-4 text-center">
             ✅ Product updated successfully! Redirecting...
@@ -568,17 +500,17 @@ const EditProductPage = () => {
           <div className="flex gap-3">
             <button
               type="button"
-              className="py-3 px-6 rounded-lg text-base font-semibold cursor-pointer transition-all border-2 border-[#e5e7eb] text-[#374151] hover:bg-gray-50"
-              onClick={() => router.push('/product')} // Navigate back to products list
-              disabled={isSubmitting || isDeleting}
+              className="py-3 px-6 rounded-lg text-base font-semibold cursor-pointer transition-all border-2 border-[#e5e7eb] text-[#374151] hover:bg-gray-50 disabled:opacity-70 disabled:cursor-not-allowed"
+              onClick={() => router.push('/product')}
+              disabled={isSubmitting || deleteLoading}
             >
               Cancel
             </button>
             <button
               type="button"
-              className="py-3 px-6 rounded-lg text-base font-semibold cursor-pointer transition-all bg-gray-100 text-[#4b5563] hover:bg-gray-200"
-              onClick={() => console.log('Save as Draft clicked')} // Functionality for draft
-              disabled={isSubmitting || isDeleting}
+              className="py-3 px-6 rounded-lg text-base font-semibold cursor-pointer transition-all bg-gray-100 text-[#4b5563] hover:bg-gray-200 disabled:opacity-70 disabled:cursor-not-allowed"
+              onClick={() => console.log('Save as Draft clicked')}
+              disabled={isSubmitting || deleteLoading}
             >
               Save as Draft
             </button>
@@ -586,19 +518,17 @@ const EditProductPage = () => {
           <div className="flex gap-3">
             <button
               type="submit"
-              className="py-3 px-6 text-white rounded-lg text-base font-semibold cursor-pointer transition-all hover:-translate-y-px"
+              className="py-3 px-6 text-white rounded-lg text-base font-semibold cursor-pointer transition-all hover:-translate-y-px disabled:opacity-70 disabled:cursor-not-allowed"
               style={{
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 boxShadow: '0 0px 0px rgba(0,0,0,0)',
                 '--tw-shadow': '0 10px 30px rgba(102, 126, 234, 0.3)',
-                opacity: (isSubmitting || isDeleting) ? 0.7 : 1,
-                cursor: (isSubmitting || isDeleting) ? 'not-allowed' : 'pointer',
               }}
               onMouseEnter={(e) => (e.currentTarget.style.boxShadow = 'var(--tw-shadow)')}
               onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
-              disabled={isSubmitting || isDeleting}
+              disabled={isSubmitting || deleteLoading || updateLoading}
             >
-              {isSubmitting ? 'Updating Product...' : 'Update Product'}
+              {isSubmitting || updateLoading ? 'Updating Product...' : 'Update Product'}
             </button>
           </div>
         </div>
@@ -610,24 +540,24 @@ const EditProductPage = () => {
           <div className="bg-white rounded-2xl p-8 max-w-lg w-full">
             <h3 className="text-xl font-bold text-[#111827] mb-3">Confirm Deletion</h3>
             <p className="text-sm text-[#6b7280] mb-6">
-              Are you sure you want to delete "{(formData.name || 'this product')}"? This action cannot be undone.
+              Are you sure you want to delete "{formData.name || 'this product'}"? This action cannot be undone.
             </p>
             <div className="flex gap-3 justify-end">
               <button
                 type="button"
-                className="py-2.5 px-5 rounded-lg text-sm font-semibold cursor-pointer border-2 border-[#e5e7eb] bg-white text-[#374151] hover:bg-gray-50"
+                className="py-2.5 px-5 rounded-lg text-sm font-semibold cursor-pointer border-2 border-[#e5e7eb] bg-white text-[#374151] hover:bg-gray-50 disabled:opacity-70"
                 onClick={() => setShowDeleteModal(false)}
-                disabled={isSubmitting || isDeleting}
+                disabled={deleteLoading}
               >
                 Cancel
               </button>
               <button
                 type="button"
-                className="py-2.5 px-5 rounded-lg text-sm font-semibold cursor-pointer bg-[#ef4444] text-white hover:bg-[#dc2626]"
+                className="py-2.5 px-5 rounded-lg text-sm font-semibold cursor-pointer bg-[#ef4444] text-white hover:bg-[#dc2626] disabled:opacity-70"
                 onClick={handleDeleteProduct}
-                disabled={isSubmitting || isDeleting}
+                disabled={deleteLoading}
               >
-                {isDeleting ? 'Deleting...' : 'Delete'}
+                {deleteLoading ? 'Deleting...' : 'Delete'}
               </button>
             </div>
           </div>

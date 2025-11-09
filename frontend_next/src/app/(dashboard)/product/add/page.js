@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useCreate } from '@/hooks/useCreate';
 
 const AddProductPage = () => {
   const router = useRouter();
+  const { createItem, loading, error: createError } = useCreate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -18,9 +20,12 @@ const AddProductPage = () => {
 
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+
+  // Define preview values from formData
+  const previewName = formData.name || 'Product Name';
+  const previewPrice = formData.price ? `₹${parseFloat(formData.price).toLocaleString('en-IN')}` : '₹0';
+  const previewStatus = formData.live ? 'Active' : 'Inactive';
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -34,100 +39,54 @@ const AddProductPage = () => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        setError('Image size must be less than 5MB');
+        alert('Image size must be less than 5MB');
         return;
       }
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
-      setError(null);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(false);
+    setIsSubmitting(true);
 
     if (!formData.name || !formData.description || !formData.price || !formData.stock || !formData.category) {
-      setError('Please fill in all required fields');
+      alert('Please fill in all required fields');
+      setIsSubmitting(false);
       return;
     }
 
     if (!imageFile) {
-      setError('Please upload a product image');
+      alert('Please upload a product image');
+      setIsSubmitting(false);
       return;
     }
 
-    setIsSubmitting(true);
+    const formDataToSend = new FormData();
+    const productPayload = {
+      name: formData.name.trim(),
+      description: formData.description.trim(),
+      price: parseFloat(formData.price),
+      stock: parseInt(formData.stock, 10),
+      category: formData.category.trim(),
+      live: formData.live,
+    };
+
+    formDataToSend.append('product', JSON.stringify(productPayload));
+    formDataToSend.append('image', imageFile);
 
     try {
-      const formDataToSend = new FormData();
-
-      const productPayload = {
-        name: formData.name.trim(),
-        description: formData.description.trim(),
-        price: parseFloat(formData.price),
-        stock: parseInt(formData.stock, 10),
-        category: formData.category.trim(),
-        live: formData.live,
-      };
-
-      console.log('📦 Product Payload:', productPayload);
-      console.log('🖼️ Image File:', {
-        name: imageFile.name,
-        size: imageFile.size,
-        type: imageFile.type
-      });
-
-      formDataToSend.append('product', JSON.stringify(productPayload));
-      formDataToSend.append('image', imageFile);
-
-      console.log('📋 FormData being sent:');
-      for (let [key, value] of formDataToSend.entries()) {
-        if (key === 'product') {
-          console.log(`  ${key}:`, JSON.parse(value));
-        } else {
-          console.log(`  ${key}:`, value);
-        }
-      }
-
-      const response = await fetch('http://localhost:8082/api/products', {
-        method: 'POST',
-        body: formDataToSend,
-      });
-
-      console.log('📨 Response Status:', response.status);
-
-      const responseText = await response.text();
-      console.log('📨 Response Body:', responseText);
-
-      if (!response.ok) {
-        throw new Error(`Server error ${response.status}: ${responseText || 'Unknown error'}`);
-      }
-
-      let result = null;
-      try {
-        result = JSON.parse(responseText);
-        console.log('✅ Product added successfully:', result);
-      } catch (e) {
-        console.log('Response is not JSON, but request was successful');
-      }
-
+      await createItem('http://localhost:8082/api/products', formDataToSend, true);
       setSuccess(true);
       alert('Product added successfully!');
       setTimeout(() => router.push('/product'), 1500);
-
     } catch (err) {
       console.error('❌ Error adding product:', err);
-      setError(err.message || 'Failed to add product');
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  const previewName = formData.name || 'New Product Name';
-  const previewPrice = formData.price ? `₹${new Intl.NumberFormat('en-IN').format(formData.price)}` : '₹0.00';
-  const previewStatus = formData.live ? 'Active' : 'Inactive';
 
   return (
     <div className="p-8 flex-1 bg-[#f9fafb]">
@@ -372,9 +331,9 @@ const AddProductPage = () => {
         </div>
 
         {/* Display submission error */}
-        {error && (
+        {createError && (
           <div className="bg-[#fef2f2] border border-[#fecaca] text-[#dc2626] rounded-lg p-3 mt-4 text-center">
-            {error}
+            {createError}
           </div>
         )}
 
