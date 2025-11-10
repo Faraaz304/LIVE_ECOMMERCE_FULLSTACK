@@ -49,17 +49,26 @@
     	</dependency>
 
     <!-- Google YouTube API -->
-    <dependency>
+    <!-- <dependency>
         <groupId>com.google.apis</groupId>
         <artifactId>google-api-services-youtube</artifactId>
         <version>v3-rev20230816-2.0.0</version>
-    </dependency>
-	 <dependency>
-        <groupId>io.github.cdimascio</groupId>
-        <artifactId>java-dotenv</artifactId>
-        <version>5.2.2</version>
-    </dependency>
-
+    </dependency> -->
+	<dependency>
+    <groupId>com.google.apis</groupId>
+    <artifactId>google-api-services-youtube</artifactId>
+    <version>v3-rev20230521-2.0.0</version>
+</dependency>
+		<dependency>
+			<groupId>com.google.http-client</groupId>
+			<artifactId>google-http-client-jackson2</artifactId>
+			<version>1.44.1</version>
+		</dependency>
+		 <dependency>
+			<groupId>me.paulschwarz</groupId>
+			<artifactId>spring-dotenv</artifactId>
+			<version>3.0.0</version>  <!-- Latest as of now; check for updates -->
+		</dependency>
     <dependency>
         <groupId>com.google.api-client</groupId>
         <artifactId>google-api-client</artifactId>

@@ -1,0 +1,50 @@
+# src/main/resources/application.yml
+
+server:
+  port: 8090 
+
+spring:
+  application:
+    name: youtube-streaming-service # Or youtube-service as you had, just keep it consistent
+
+  config:
+    import: optional:configserver:http://localhost:8888 # Your Config Server URL
+
+  cloud:
+    discovery:
+      enabled: true
+
+  # --- Spring Security OAuth2 Client Configuration (REQUIRED STRUCTURE) ---
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${YOUTUBE_CLIENT_ID} # Pulled from .env
+            client-secret: ${YOUTUBE_CLIENT_SECRET} # Pulled from .env
+            scope:
+              - openid
+              - email
+              - profile
+              - https://www.googleapis.com/auth/youtube # CRITICAL: allows managing YouTube streams
+            redirect-uri: "{baseUrl}/oauth2/callback/{registrationId}" # Standard Spring Security OAuth2 redirect URI pattern
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            jwk-set-uri: https://www.googleapis.com/oauth2/v3/certs
+
+# --- Spring Cloud Netflix Eureka Client Configuration ---
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/ # Your Eureka Server URL
+    enabled: true
+  instance:
+    hostname: ${spring.application.name}
+    preferIpAddress: true
+
+# --- YouTube API Key (for public, unauthorized API calls if needed) ---
+youtube:
+  api-key: ${YOUTUBE_API_KEY} # Your general YouTube API Key (for read-only public data)
