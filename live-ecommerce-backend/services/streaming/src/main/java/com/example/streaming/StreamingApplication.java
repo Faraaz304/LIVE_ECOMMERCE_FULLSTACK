@@ -1,13 +1,13 @@
-package com.livecommerce.stream_service;
+package com.example.streaming;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class StreamServiceApplication {
+public class StreamingApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(StreamServiceApplication.class, args);
+		SpringApplication.run(StreamingApplication.class, args);
 	}
 
 }
