@@ -7,8 +7,6 @@ import { usePathname } from 'next/navigation';
 const Sidebar = ({ sidebarOpen, handleGoLive, handleLogout }) => {
   const pathname = usePathname();
 
-  if(localStorage.getItem('userRole') == 'user'){
-  }
   
   return (
     <aside
