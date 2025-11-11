@@ -32,12 +32,8 @@ const ProductsPage = () => {
           id: p.id.toString(), // Ensure ID is string
           name: p.name,
           price: new Intl.NumberFormat('en-IN').format(p.price), // Format price for display
-          karat: p.karat || (p.category?.toLowerCase() === 'study' ? 'N/A' : '22K'),
-          weight: p.weight || (p.category?.toLowerCase() === 'study' ? 'N/A' : '45.5g'),
           stock: p.stock,
-          sku: p.sku || `SKU-${p.id}`,
           status: p.live ? 'active' : 'inactive',
-          icon: getProductIcon(p.category),
           imageUrl: p.imageUrl ? `http://localhost:8082${p.imageUrl}` : null,
         }));
         setProducts(formattedProducts);
@@ -52,19 +48,7 @@ const ProductsPage = () => {
     fetchProducts();
   }, []);
 
-  const getProductIcon = (category) => {
-    switch (category?.toLowerCase()) {
-      case 'necklace sets': return '💎';
-      case 'rings': return '💍';
-      case 'earrings': return '👂';
-      case 'bridal collections': return '👑';
-      case 'bracelets': return '📿';
-      case 'bangles': return '⚪';
-      case 'chains': return '🔗';
-      case 'study': return '✍️';
-      default: return '📦';
-    }
-  };
+  
 
   const handleCheckboxChange = (productId, isChecked) => {
     setSelectedProductIds((prevSelected) => {

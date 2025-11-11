@@ -5,8 +5,6 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-// NO METADATA EXPORT IN THIS FILE, as requested.
-
 const RegisterPage = () => {
   const router = useRouter();
 
@@ -14,6 +12,7 @@ const RegisterPage = () => {
     username: '',
     email: '',
     password: '',
+    role: 'user', // Default role set to 'user'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
@@ -33,7 +32,7 @@ const RegisterPage = () => {
     setSuccessMessage(null);
     setIsSubmitting(true);
 
-    if (!formData.username || !formData.email || !formData.password) {
+    if (!formData.username || !formData.email || !formData.password || !formData.role) {
       setSubmitError('Please fill in all fields.');
       setIsSubmitting(false);
       return;
@@ -45,7 +44,7 @@ const RegisterPage = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(formData), // Ensure 'role' is included here
       });
 
       const responseText = await response.text();
@@ -60,8 +59,6 @@ const RegisterPage = () => {
       }
 
       if (!response.ok) {
-        // If response.ok is false, it's an HTTP error.
-        // Use backend's error message if available, otherwise a generic one.
         throw new Error(result?.message || `Server error: ${response.status} ${response.statusText}. Response body: ${responseText}`);
       }
 
@@ -75,13 +72,13 @@ const RegisterPage = () => {
         localStorage.setItem('accessToken', result.token);
         localStorage.setItem('refreshToken', result.refreshToken);
         localStorage.setItem('userEmail', result.email); // Store email for display
-        
+        localStorage.setItem('userRole', result.role); // Store role for display/client-side checks
+
         setSuccessMessage('Registration successful! Redirecting to login...');
         setTimeout(() => {
-          router.push('/login'); // Redirect to dashboard after successful registration
+          router.push('/login');
         }, 2000);
       } else {
-        // This case might hit if response.ok is true but 'result' is empty or token is missing
         throw new Error('Registration successful but no token received. Please try logging in.');
       }
 
@@ -152,6 +149,26 @@ const RegisterPage = () => {
           />
         </div>
 
+        {/* New Role Selection Dropdown */}
+        <div className="mb-6">
+          <label className="block text-sm font-semibold text-[#374151] mb-2" htmlFor="role">
+            Register as
+          </label>
+          <select
+            id="role"
+            name="role"
+            className="w-full px-4 py-2 border-2 border-[#e5e7eb] rounded-lg focus:outline-none focus:border-[#667eea] focus:shadow-[0_0_0_3px_rgba(102,126,234,0.1)]"
+            value={formData.role}
+            onChange={handleInputChange}
+            required
+            disabled={isSubmitting}
+          >
+            <option value="user">User</option>
+            <option value="seller">Seller</option>
+            {/* The 'admin' role is intentionally excluded from the UI */}
+          </select>
+        </div>
+
         {submitError && (
           <div className="bg-[#fef2f2] border border-[#fecaca] text-[#dc2626] rounded-lg p-3 mb-4 text-center">
             {submitError}
@@ -192,4 +209,3 @@ const RegisterPage = () => {
 };
 
 export default RegisterPage;
-

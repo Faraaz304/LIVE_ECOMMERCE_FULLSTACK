@@ -7,6 +7,9 @@ import { usePathname } from 'next/navigation';
 const Sidebar = ({ sidebarOpen, handleGoLive, handleLogout }) => {
   const pathname = usePathname();
 
+  if(localStorage.getItem('userRole') == 'user'){
+  }
+  
   return (
     <aside
       className={`fixed inset-y-0 left-0 z-40 w-[260px] bg-white border-r border-[#e5e7eb] flex flex-col h-screen overflow-y-auto

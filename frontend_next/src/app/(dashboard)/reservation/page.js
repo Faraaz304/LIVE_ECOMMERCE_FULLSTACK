@@ -11,6 +11,13 @@ const ReservationsPage = () => {
   const [activeTab, setActiveTab] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
 
+  
+    console.log(localStorage.getItem('userRole'));
+
+  if(localStorage.getItem('userRole') == 'user'){
+    console.log('user');
+    window.location.href = '/product';
+  }
   // Fetch all reservations
   useEffect(() => {
     const fetchReservations = async () => {
