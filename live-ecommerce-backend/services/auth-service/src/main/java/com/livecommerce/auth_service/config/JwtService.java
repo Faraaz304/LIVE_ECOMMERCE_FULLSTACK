@@ -84,6 +84,13 @@ public class JwtService {
         return claims.getSubject();
     }
 
+    // ✅ NEW METHOD - Extract role from token
+    public String extractRole(String token) {
+        Claims claims = parseClaims(token);
+        Object role = claims.get("role");
+        return role != null ? role.toString() : "USER";
+    }
+
     public Claims parseClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
