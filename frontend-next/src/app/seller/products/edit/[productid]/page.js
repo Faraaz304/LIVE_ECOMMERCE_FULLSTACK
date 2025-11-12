@@ -149,18 +149,16 @@ const EditProductPage = () => {
       stock: parseInt(formData.stock),
     };
 
-    const formDataToSend = new FormData(); // Renamed from updatePayload to avoid confusion
-    formDataToSend.append('product', JSON.stringify(productPayload));
-
-    // Only append image if it's a new file (not an existing URL)
-    if (primaryImageObject.file) {
-      formDataToSend.append('image', primaryImageObject.file);
-    }
+    // Prepare payload object for the hook
+    const updatePayload = {
+      product: productPayload,
+      image: primaryImageObject.file || null // Pass the file or null if using existing image
+    };
 
     try {
       await updateResource(
         `http://localhost:8082/api/products/${routeProductId}`,
-        formDataToSend,
+        updatePayload,
         { isFormData: true } // Indicate that we're sending FormData
       );
 
