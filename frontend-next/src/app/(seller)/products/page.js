@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import ProductCard from '../../../components/ProductCard'; // Corrected import path
+import ProductCard from '@/components/products/ProductCard'; // Corrected import path
 
 // NO METADATA EXPORT IN THIS FILE, as requested.
 

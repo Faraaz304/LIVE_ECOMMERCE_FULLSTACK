@@ -3,16 +3,16 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-
-// NO METADATA EXPORT IN THIS FILE, as requested.
+import { useRouter, useSearchParams } from 'next/navigation';
 
 const LoginPage = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectPath = searchParams.get('redirect') || null;
 
   const [formData, setFormData] = useState({
     email: '',
-        password: '',
+    password: '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
@@ -39,8 +39,7 @@ const LoginPage = () => {
     }
 
     try {
-      // Use environment variable for API URL
-      const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8084'; 
+      const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8084';
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
@@ -57,7 +56,6 @@ const LoginPage = () => {
           result = JSON.parse(responseText);
         } catch (parseError) {
           console.warn('Backend responded with non-JSON text on login:', responseText, parseError);
-          // If a non-JSON response is received for an error, handle it gracefully
           throw new Error(`Login failed. Server responded with: ${responseText.substring(0, 100)}`);
         }
       }
@@ -66,47 +64,33 @@ const LoginPage = () => {
         throw new Error(result?.message || `Login failed. Server error: ${response.status} ${response.statusText}.`);
       }
 
-      // --- IMPORTANT UPDATE: Token Handling ---
-      // **DO NOT store tokens in localStorage.**
-      // Instead, your backend should set HttpOnly, Secure cookies upon successful login.
-      // The client-side JavaScript will then not need to handle tokens directly for security.
-      // You may still receive user details like email/role in the response body.
-
-      // For demonstration (if backend cannot be changed immediately, but strongly discourage in production):
-      // if (result && result.token) {
-      //   localStorage.setItem('accessToken', result.token);
-      //   localStorage.setItem('refreshToken', result.refreshToken); // Only if needed client-side and secure fallback
-      //   localStorage.setItem('userEmail', result.email);
-      //   localStorage.setItem('userRole', result.role);
-      // } else {
-      //   // If your backend sets HTTP-only cookies, 'result.token' might be null here, which is expected.
-      //   // You'd only expect other user details like email/role.
-      //   console.log('Login successful. Backend expected to set secure cookies.');
-      // }
-
+      // --- IMPORTANT: Token Handling ---
+      // Your backend MUST set HttpOnly, Secure cookies upon successful login.
+      // This client-side JavaScript should NOT store accessToken in localStorage directly.
+      // It's acceptable to store non-sensitive user details like email/role in localStorage
+      // for client-side display or quick checks, but not for authentication itself.
 
       if (result && result.email && result.role) {
-        // Store only non-sensitive user details if necessary for client-side display
-        // If your backend sets HTTP-only cookies, you won't get tokens here, which is correct.
-        localStorage.setItem('userEmail', result.email); 
-        localStorage.setItem('userRole', result.role); 
+        localStorage.setItem('userEmail', result.email);
+        localStorage.setItem('userRole', result.role);
 
-        setSuccessMessage('Login successful! Redirecting to dashboard...');
-        
-        // Clear form fields after successful submission (optional UX)
+        setSuccessMessage('Login successful! Redirecting...');
+
         setFormData({ email: '', password: '' });
 
+        console.log(localStorage.getItem('userRole'));
         setTimeout(() => {
-          if (result.role === 'user') {
-            router.push('/products'); // Redirect regular users
-          } else if (result.role === 'admin') {
-            router.push('/admin'); // Redirect admins
-          } else if (result.role === 'seller') {
-            router.push('/seller/dashboard'); // Redirect sellers to dashboard
-          } else {
-            router.push('/'); // Default redirect for unhandled roles or general success
-          }
-        }, 1500); // Redirect after a short delay to show success message
+          // Priority: Redirect to the original path if it exists
+          if (redirectPath) {
+            router.push(redirectPath);
+          } else if (result.role === 'USER') {
+            router.push('/user/dashboard'); // Redirect regular users to their product list within (user) group
+          } else if (result.role === 'ADMIN') {
+            router.push('/admin/dashboard'); // Redirect admins to their dashboard within (admin) group
+          } else if (result.role === 'SELLER') {
+            router.push('/seller/dashboard'); // Redirect sellers to their dashboard within (seller) group
+          } 
+        }, 1500);
       } else {
         throw new Error('Login successful but missing user details (email/role).');
       }
@@ -123,7 +107,7 @@ const LoginPage = () => {
     <div className="bg-white p-8 rounded-xl shadow-md max-w-md w-full">
       <div className="text-center mb-6">
         <h1 className="text-3xl font-bold text-[#111827] mb-2">Welcome Back!</h1>
-        <p className="text-sm text-[#6b7280]">Login to your seller account</p>
+        <p className="text-sm text-[#6b7280]">Login to your account</p>
       </div>
 
       <form onSubmit={handleSubmit}>
