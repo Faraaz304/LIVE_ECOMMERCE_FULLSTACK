@@ -12,7 +12,7 @@ const RegisterPage = () => {
     username: '',
     email: '',
     password: '',
-    role: 'user', // Default role set to 'user'
+    role: 'USER', // Default role set to 'user'
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
@@ -169,8 +169,8 @@ const RegisterPage = () => {
             required
             disabled={isSubmitting}
           >
-            <option value="user">User</option>
-            <option value="seller">Seller</option>
+            <option value="USER">User</option>
+            <option value="SELLER">Seller</option>
             {/* The 'admin' role is correctly excluded from the UI, as requested. */}
           </select>
         </div>

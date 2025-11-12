@@ -5,6 +5,7 @@ import com.livecommerce.auth_service.config.JwtService;
 import com.livecommerce.auth_service.dto.AuthResponse;
 import com.livecommerce.auth_service.dto.LoginRequest;
 import com.livecommerce.auth_service.dto.RegisterRequest;
+import com.livecommerce.auth_service.entity.Role;
 import com.livecommerce.auth_service.entity.User;
 import com.livecommerce.auth_service.repository.UserRepository;
 import com.livecommerce.auth_service.service.AuthService;
@@ -42,8 +43,8 @@ public class AuthServiceImpl implements AuthService {
         user.setEmail(request.getEmail());
         user.setUsername(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setRole(request.getRole());
-        // user.setRole("USER"); // default role
+        // Set role from request or default to USER
+        user.setRole(request.getRole() != null ? request.getRole() : Role.USER);
 
         userRepository.save(user);
 

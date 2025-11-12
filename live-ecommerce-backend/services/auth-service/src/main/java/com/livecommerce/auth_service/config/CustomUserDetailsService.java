@@ -21,13 +21,9 @@ public class CustomUserDetailsService implements UserDetailsService {
                 .or(() -> userRepository.findByUsername(usernameOrEmail))
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + usernameOrEmail));
 
-        // ✅ IMPROVED: Handle null and whitespace in role
-        String role = user.getRole() != null ? user.getRole().trim() : "USER";
-        
-        // Ensure role has ROLE_ prefix for Spring Security
-        if (!role.startsWith("ROLE_")) {
-            role = "ROLE_" + role;
-        }
+        // ✅ Convert enum to String with ROLE_ prefix for Spring Security
+        String roleName = user.getRole() != null ? user.getRole().name() : "USER";
+        String role = "ROLE_" + roleName;
 
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(), // using email as username (subject)
