@@ -46,6 +46,7 @@ const LoginPage = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData),
+        credentials: 'include',
       });
 
       const responseText = await response.text();
@@ -78,7 +79,7 @@ const LoginPage = () => {
 
         setFormData({ email: '', password: '' });
 
-        console.log(localStorage.getItem('userRole'));
+        // console.log(localStorage.getItem('userRole'));
         setTimeout(() => {
           // Priority: Redirect to the original path if it exists
           if (redirectPath) {

@@ -94,3 +94,101 @@ export const config = {
     '/((?!api|_next/static|_next/image|favicon.ico|login|register|$).*)',
   ],
 };
+
+
+// ----------------------------------------------------------------------------------------------
+
+
+// // middleware.js
+// import { NextResponse } from 'next/server';
+// import { jwtVerify } from 'jose';
+
+// const JWT_SECRET = new TextEncoder().encode(
+//   process.env.JWT_SECRET_KEY || 'fallback-secret-change-in-prod'
+// );
+// const accessRules = {
+//   ADMIN: ['/admin'],
+//   SELLER: ['/seller'],
+//   USER: ['/user', '/products', '/profile', '/reservations'],
+// };
+
+// const PUBLIC_ROUTES = ['/', '/login', '/register', '/api/auth/login', '/api/auth/register'];
+
+// function redirectToLogin(req, returnPath) {
+//   const url = req.nextUrl.clone();
+//   url.pathname = '/login';
+//   url.searchParams.set('redirect', returnPath);
+//   return NextResponse.redirect(url);
+// }
+
+// function redirectToDashboard(role, req) {
+//   const url = req.nextUrl.clone();
+//   if (role === 'ADMIN') url.pathname = '/admin/dashboard';
+//   else if (role === 'SELLER') url.pathname = '/seller/dashboard';
+//   else if (role === 'USER') url.pathname = '/user/products';
+//   else url.pathname = '/login';
+//   return NextResponse.redirect(url);
+// }
+
+// export async function middleware(request) {
+//   const { pathname, origin } = request.nextUrl;
+
+//   const isPublic = PUBLIC_ROUTES.some(r => pathname.startsWith(r));
+//   if (isPublic) {
+//     // **Special case**: after a successful login/register we receive JSON with a token.
+//     // Intercept the API response, set httpOnly cookie, then redirect client.
+//     if (['/api/auth/login', '/api/auth/register'].includes(pathname) && request.method === 'POST') {
+//       const cloned = request.clone();
+//       const body = await cloned.text();
+
+//       let json;
+//       try { json = JSON.parse(body); } catch { return NextResponse.next(); }
+
+//       const { token, role, email } = json;
+//       if (token && role) {
+//         const response = NextResponse.redirect(new URL('/', origin));
+//         response.cookies.set('accessToken', token, {
+//           httpOnly: true,
+//           secure: process.env.NODE_ENV === 'production',
+//           sameSite: 'strict',
+//           path: '/',
+//           maxAge: 15 * 60, // 15 min – matches your JWT iat/exp
+//         });
+//         return response;
+//       }
+//     }
+//     return NextResponse.next();
+//   }
+
+//   const accessToken = request.cookies.get('accessToken')?.value;
+//   if (!accessToken) return redirectToLogin(request, pathname);
+
+//   let payload;
+//   try {
+//     const { payload: p } = await jwtVerify(accessToken, JWT_SECRET);
+//     payload = p;
+//   } catch (err) {
+//     console.error('JWT verify error:', err.message);
+//     const resp = redirectToLogin(request, pathname);
+//     resp.cookies.delete('accessToken');
+//     return resp;
+//   }
+
+//   const userRole = payload.role?.toUpperCase(); // your JWT contains "ADMIN"
+
+//   const protectedBySomeRole = Object.values(accessRules).some(prefixes =>
+//     prefixes.some(p => pathname.startsWith(p))
+//   );
+
+//   if (!protectedBySomeRole) return NextResponse.next(); // not a protected area
+//   const allowed = (accessRules[userRole] || []).some(p => pathname.startsWith(p));
+//   if (!allowed) return redirectToDashboard(userRole, request);
+
+//   return NextResponse.next();
+// }
+
+// export const config = {
+//   matcher: [
+//     '/((?!api|_next|favicon.ico).*)', // Exclude API and Next.js internal assets
+//   ],
+// };

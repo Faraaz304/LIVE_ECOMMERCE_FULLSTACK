@@ -46,6 +46,7 @@ const RegisterPage = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(formData), // Ensure 'role' is included here
+        credentials: 'include',
       });
 
       const responseText = await response.text();

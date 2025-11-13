@@ -10,7 +10,7 @@ const ProductCard = ({ product }) => {
 
   const handleCardClick = () => {
     // Navigate to the product view page within the (user) route group
-    router.push(`/products/view/${product.id}`);
+    router.push(`/seller/products/view/${product.id}`);
   };
 
   // Removed handleEditClick as edit functionality is not for user role
