@@ -3,22 +3,39 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import UserSidebar from '@/components/UserSidebar';
-import { getUserName } from '@/utils/auth';
 
 export default function UserLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userName, setUserName] = useState('User');
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    const name = getUserName();
-    setUserName(name);
-  }, []);
+    const role = localStorage.getItem("userRole")
+    
+    if (role!="USER") {
+      router.push('/login');
+      return;
+    }
+    
+    setIsAuthorized(true);
+    // const name = getUserName();
+    // setUserName(name);
+  }, [router]);
 
   const handleLogout = () => {
-    document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    localStorage.clear();
     router.push('/login');
   };
+
+  // Show loading or nothing while checking authorization
+  if (!isAuthorized) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-lg">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen overflow-hidden">

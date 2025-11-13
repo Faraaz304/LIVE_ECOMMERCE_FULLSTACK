@@ -66,12 +66,11 @@ const LoginPage = () => {
       }
 
       // --- IMPORTANT: Token Handling ---
-      // Your backend MUST set HttpOnly, Secure cookies upon successful login.
-      // This client-side JavaScript should NOT store accessToken in localStorage directly.
-      // It's acceptable to store non-sensitive user details like email/role in localStorage
-      // for client-side display or quick checks, but not for authentication itself.
-
-      if (result && result.email && result.role) {
+      // Store the JWT token in a cookie for authentication
+      if (result && result.token && result.email && result.role) {
+        // Set the access token as a cookie
+        
+        // Store non-sensitive user details in localStorage for display
         localStorage.setItem('userEmail', result.email);
         localStorage.setItem('userRole', result.role);
 
@@ -79,21 +78,20 @@ const LoginPage = () => {
 
         setFormData({ email: '', password: '' });
 
-        // console.log(localStorage.getItem('userRole'));
         setTimeout(() => {
           // Priority: Redirect to the original path if it exists
           if (redirectPath) {
             router.push(redirectPath);
           } else if (result.role === 'USER') {
-            router.push('/user/dashboard'); // Redirect regular users to their product list within (user) group
+            router.push('/user/dashboard');
           } else if (result.role === 'ADMIN') {
-            router.push('/admin/dashboard'); // Redirect admins to their dashboard within (admin) group
+            router.push('/admin/dashboard');
           } else if (result.role === 'SELLER') {
-            router.push('/seller/dashboard'); // Redirect sellers to their dashboard within (seller) group
+            router.push('/seller/dashboard');
           } 
-        }, 1500);
+        }, 500);
       } else {
-        throw new Error('Login successful but missing user details (email/role).');
+        throw new Error('Login successful but missing required data (token/email/role).');
       }
 
     } catch (err) {

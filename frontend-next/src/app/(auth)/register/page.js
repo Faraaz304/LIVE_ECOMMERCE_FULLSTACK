@@ -64,25 +64,31 @@ const RegisterPage = () => {
         throw new Error(result?.message || `Server error: ${response.status} ${response.statusText}. Response body: ${responseText}`);
       }
 
-      // --- IMPORTANT UPDATE: Token Handling ---
-      // For a real application, your backend should set HttpOnly, Secure cookies
-      // upon successful registration (similar to login).
-      // Client-side JavaScript should generally not store tokens directly in localStorage.
-      // If your backend sets HTTP-only cookies, `result.token` will likely be null here,
-      // which is the expected and secure behavior.
-      // We are explicitly removing client-side storage of accessToken/refreshToken.
+      // --- Token Handling ---
+      // If backend returns a token on registration, store it
+      if (result && result.token) {
+        // Set the access token as a cookie
+        document.cookie = `accessToken=${result.token}; path=/; max-age=86400; SameSite=Strict`;
+      }
 
       if (result && result.email && result.role) {
         console.log('Registration successful:', result);
-        localStorage.setItem('userEmail', result.email); // Store non-sensitive details for display
-        localStorage.setItem('userRole', result.role);   // Store non-sensitive details for display
+        localStorage.setItem('userEmail', result.email);
+        localStorage.setItem('userRole', result.role);
 
-        setSuccessMessage('Registration successful! Redirecting to login...');
+        setSuccessMessage('Registration successful! Redirecting...');
         setTimeout(() => {
-          router.push('/login');
+          // Redirect based on role
+          if (result.role === 'USER') {
+            router.push('/user/dashboard');
+          } else if (result.role === 'SELLER') {
+            router.push('/seller/dashboard');
+          } else {
+            router.push('/login');
+          }
         }, 2000);
       } else {
-        // If the backend doesn't return email/role, but the registration was successful
+        // If the backend doesn't return email/role, redirect to login
         setSuccessMessage('Registration successful! Please login.');
         setTimeout(() => {
           router.push('/login');
