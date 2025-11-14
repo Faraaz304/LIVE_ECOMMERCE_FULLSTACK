@@ -176,8 +176,8 @@ const RegisterPage = () => {
             required
             disabled={isSubmitting}
           >
-            <option value="USER">User</option>
-            <option value="SELLER">Seller</option>
+            <option value="USER">CLIENT</option>
+            <option value="SELLER">SELLER</option>
             {/* The 'admin' role is correctly excluded from the UI, as requested. */}
           </select>
         </div>
