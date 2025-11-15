@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import UserSidebar from '@/components/ui/adminSidebar';
+import UserSidebar from '@/components/ui/userSidebar';
 import { Button } from '@/components/ui/button';
 
 export default function UserLayout({ children }) {
