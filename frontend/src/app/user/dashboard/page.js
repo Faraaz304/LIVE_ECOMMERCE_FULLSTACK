@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 export default function UserDashboard() {
   const [userData, setUserData] = useState({
@@ -25,112 +27,123 @@ export default function UserDashboard() {
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-teal-50 p-6">
       <div className="max-w-5xl mx-auto">
         {/* Welcome Section */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-          <h1 className="text-4xl font-bold text-gray-900">
-            Welcome back, {userData.name}! 👋
-          </h1>
-          <p className="text-gray-600 mt-2">Here's what's happening with your account</p>
-        </div>
+        <Card className="mb-8 shadow-xl">
+          <CardHeader>
+            <CardTitle className="text-4xl">Welcome back, {userData.name}! 👋</CardTitle>
+            <CardDescription className="text-base mt-2">Here's what's happening with your account</CardDescription>
+          </CardHeader>
+        </Card>
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-green-500 to-teal-500 text-white rounded-2xl shadow-lg p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100 text-sm">Total Orders</p>
-                <p className="text-4xl font-bold mt-2">{userData.totalOrders}</p>
+          <Card className="bg-gradient-to-br from-green-500 to-teal-500 text-white border-0">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-100 text-sm">Total Orders</p>
+                  <p className="text-4xl font-bold mt-2">{userData.totalOrders}</p>
+                </div>
+                <span className="text-5xl opacity-50">📦</span>
               </div>
-              <span className="text-5xl opacity-50">📦</span>
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-blue-500 to-indigo-500 text-white rounded-2xl shadow-lg p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100 text-sm">Active Orders</p>
-                <p className="text-4xl font-bold mt-2">{userData.activeOrders}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-blue-500 to-indigo-500 text-white border-0">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100 text-sm">Active Orders</p>
+                  <p className="text-4xl font-bold mt-2">{userData.activeOrders}</p>
+                </div>
+                <span className="text-5xl opacity-50">🚚</span>
               </div>
-              <span className="text-5xl opacity-50">🚚</span>
-            </div>
-          </div>
-          <div className="bg-gradient-to-br from-pink-500 to-rose-500 text-white rounded-2xl shadow-lg p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-pink-100 text-sm">Wishlist</p>
-                <p className="text-4xl font-bold mt-2">{userData.wishlistItems}</p>
+            </CardContent>
+          </Card>
+          <Card className="bg-gradient-to-br from-pink-500 to-rose-500 text-white border-0">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-pink-100 text-sm">Wishlist</p>
+                  <p className="text-4xl font-bold mt-2">{userData.wishlistItems}</p>
+                </div>
+                <span className="text-5xl opacity-50">❤️</span>
               </div>
-              <span className="text-5xl opacity-50">❤️</span>
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <Link
-            href="/products"
-            className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all group"
-          >
-            <div className="flex items-center space-x-4">
-              <div className="bg-green-100 rounded-full p-4 group-hover:bg-green-200 transition-colors">
-                <span className="text-3xl">🛍️</span>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Browse Products</h3>
-                <p className="text-gray-600 text-sm">Discover new items</p>
-              </div>
-            </div>
+          <Link href="/products">
+            <Card className="hover:shadow-xl transition-all cursor-pointer group">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="bg-green-100 rounded-full p-4 group-hover:bg-green-200 transition-colors">
+                    <span className="text-3xl">🛍️</span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">Browse Products</h3>
+                    <p className="text-gray-600 text-sm">Discover new items</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </Link>
 
-          <Link
-            href="/user/orders"
-            className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all group"
-          >
-            <div className="flex items-center space-x-4">
-              <div className="bg-blue-100 rounded-full p-4 group-hover:bg-blue-200 transition-colors">
-                <span className="text-3xl">📋</span>
-              </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">My Orders</h3>
-                <p className="text-gray-600 text-sm">Track your purchases</p>
-              </div>
-            </div>
+          <Link href="/user/orders">
+            <Card className="hover:shadow-xl transition-all cursor-pointer group">
+              <CardContent className="p-6">
+                <div className="flex items-center space-x-4">
+                  <div className="bg-blue-100 rounded-full p-4 group-hover:bg-blue-200 transition-colors">
+                    <span className="text-3xl">📋</span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-900">My Orders</h3>
+                    <p className="text-gray-600 text-sm">Track your purchases</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </Link>
         </div>
 
         {/* Recent Orders */}
-        <div className="bg-white rounded-2xl shadow-lg p-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Recent Orders</h2>
-          <div className="space-y-4">
-            <UserOrderItem
-              orderId="#1234"
-              productName="Wireless Headphones"
-              date="Nov 10, 2025"
-              status="Delivered"
-              amount="$89.99"
-            />
-            <UserOrderItem
-              orderId="#1233"
-              productName="Smart Watch Pro"
-              date="Nov 8, 2025"
-              status="In Transit"
-              amount="$199.99"
-            />
-            <UserOrderItem
-              orderId="#1232"
-              productName="USB-C Cable"
-              date="Nov 5, 2025"
-              status="Delivered"
-              amount="$12.99"
-            />
-          </div>
-          <div className="mt-6 text-center">
-            <Link
-              href="/user/orders"
-              className="inline-block bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors"
-            >
-              View All Orders
-            </Link>
-          </div>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl">Recent Orders</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <UserOrderItem
+                orderId="#1234"
+                productName="Wireless Headphones"
+                date="Nov 10, 2025"
+                status="Delivered"
+                amount="$89.99"
+              />
+              <UserOrderItem
+                orderId="#1233"
+                productName="Smart Watch Pro"
+                date="Nov 8, 2025"
+                status="In Transit"
+                amount="$199.99"
+              />
+              <UserOrderItem
+                orderId="#1232"
+                productName="USB-C Cable"
+                date="Nov 5, 2025"
+                status="Delivered"
+                amount="$12.99"
+              />
+            </div>
+            <div className="mt-6 text-center">
+              <Link href="/user/orders">
+                <Button size="lg" className="bg-green-600 hover:bg-green-700">
+                  View All Orders
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

@@ -1,41 +1,30 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import UserSidebar from '@/components/ui/adminSidebar';
+import { Button } from '@/components/ui/button';
 
 export default function UserLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [userName, setUserName] = useState('User');
-  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [userName] = useState('User');
   const router = useRouter();
 
-//   useEffect(() => {
+  //   useEffect(() => {
 //     const role = localStorage.getItem("userRole")
     
-//     if (role!="USER") {
+//     if (role!="SELLER") {
 //       router.push('/login');
 //       return;
 //     }
     
 //     setIsAuthorized(true);
-//     // const name = getUserName();
-//     // setUserName(name);
 //   }, [router]);
 
   const handleLogout = () => {
     localStorage.clear();
     router.push('/login');
   };
-
-  // Show loading or nothing while checking authorization
-//   if (!isAuthorized) {
-//     return (
-//       <div className="flex items-center justify-center h-screen">
-//         <div className="text-lg">Loading...</div>
-//       </div>
-//     );
-//   }
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -46,12 +35,14 @@ export default function UserLayout({ children }) {
       />
       
       {/* Mobile menu button */}
-      <button
+      <Button
+        variant="outline"
+        size="icon"
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg"
+        className="md:hidden fixed top-4 left-4 z-50 shadow-lg"
       >
         <span className="text-2xl">{sidebarOpen ? '✕' : '☰'}</span>
-      </button>
+      </Button>
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto md:ml-[260px]">
