@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-// Import the useProducts hook instead of useCreate
 import useProducts from '@/hooks/useProducts'; 
 
 // Import Shadcn UI components
@@ -116,8 +115,6 @@ const AddProductPage = () => {
       }
     } catch (err) {
       console.error('❌ Error adding product (catch block):', err);
-      // The error state from useProducts should ideally capture this.
-      // If it's a network error before response, this catch block might be hit.
       alert(`An unexpected error occurred: ${err.message}`);
     }
   };
@@ -128,7 +125,6 @@ const AddProductPage = () => {
         {/* Page Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold text-[#111827]">Add New Product</h1>
-          <p className="text-base text-[#6b7280] mt-1">Add a new jewelry product to your catalog</p>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -186,7 +182,7 @@ const AddProductPage = () => {
             {/* Product Images */}
             <div className="bg-white rounded-xl border border-[#e5e7eb] p-6">
               <h2 className="text-lg font-bold text-[#111827] mb-4 flex items-center gap-2">📸 Product Images</h2>
-              <p className="text-sm text-[#6b7280] mb-4 -mt-3">Upload high-quality images of your jewelry product</p>
+              <p className="text-sm text-[#6b7280] mb-4 -mt-3">Upload high-quality images of your product</p>
 
               <div
                 className="border-2 border-dashed border-[#e5e7eb] rounded-xl p-8 text-center bg-gray-50 cursor-pointer transition-all hover:border-[#667eea] hover:bg-[#667eea]/[0.02]"
@@ -297,15 +293,12 @@ const AddProductPage = () => {
                     <SelectValue placeholder="Select Category" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Necklace Sets">Necklace Sets</SelectItem>
-                    <SelectItem value="Rings">Rings</SelectItem>
-                    <SelectItem value="Earrings">Earrings</SelectItem>
+                    <SelectItem value="Necklace Sets">Electronics</SelectItem>
+                    <SelectItem value="Rings">jewelry</SelectItem>
+                    <SelectItem value="Earrings">kictchen</SelectItem>
                     <SelectItem value="Bridal Collections">Bridal Collections</SelectItem>
-                    <SelectItem value="Bracelets">Bracelets</SelectItem>
-                    <SelectItem value="Bangles">Bangles</SelectItem>
-                    <SelectItem value="Chains">Chains</SelectItem>
-                    <SelectItem value="Pendants">Pendants</SelectItem>
-                    <SelectItem value="study">Study</SelectItem>
+                    <SelectItem value="Bracelets">Cosmetics</SelectItem>
+                    <SelectItem value="Bangles">Stationary</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -341,13 +334,13 @@ const AddProductPage = () => {
               <div className="mt-5 pt-5 border-t border-[#e5e7eb]">
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-medium text-[#374151]">Product Visibility</span>
-                  <label htmlFor="liveCheckbox" className="relative inline-flex items-center cursor-pointer">
-                    <Checkbox
-                      id="liveCheckbox"
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
                       name="live"
                       checked={formData.live}
-                      onCheckedChange={(checked) => handleCheckboxChange(checked, 'live')}
-                      className="peer sr-only" // Hide the default checkbox visually
+                      onChange={handleInputChange}
                     />
                     <div
                       className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"
@@ -371,13 +364,6 @@ const AddProductPage = () => {
             </div>
           </div>
         </div>
-
-        {/* Display submission error */}
-        {createError && ( // Use createError from the hook
-          <div className="bg-[#fef2f2] border border-[#fecaca] text-[#dc2626] rounded-lg p-3 mt-4 text-center">
-            {createError}
-          </div>
-        )}
 
         {/* Display success message */}
         {success && (
@@ -404,9 +390,11 @@ const AddProductPage = () => {
             className="bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:opacity-90"
             disabled={isLoading} // Use isLoading from the hook
           >
-            {isLoading ? 'Adding Product...' : 'Add Product Now'} {/* Use isLoading for text */}
+           add product 
           </Button>
         </div>
+
+        
         </form>
       </div>
     </div>
