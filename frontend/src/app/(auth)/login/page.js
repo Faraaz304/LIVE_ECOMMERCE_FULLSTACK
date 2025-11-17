@@ -53,7 +53,7 @@ const LoginPage = () => {
         } else {
           router.push('/'); // Default fallback
         }
-      }, 500);
+      }, 0);
     }
     // If result is null, it means `login` failed and `submitError` in `useAuth` is already set.
   };

@@ -54,7 +54,7 @@ const RegisterPage = () => {
         } else {
           router.push('/login'); // Fallback to login if role is unexpected or not provided
         }
-      }, 2000);
+      }, 0);
     }
     // If result is null, it means `register` failed and `submitError` in `useAuth` is already set.
   };
