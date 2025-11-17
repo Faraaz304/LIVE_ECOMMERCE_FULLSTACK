@@ -35,9 +35,6 @@ const LoginPage = () => {
     e.preventDefault();
     clearMessages(); // Clear previous messages on new submission
 
-   
-
-
     const result = await login(formData.email, formData.password);
 
     if (result) {
