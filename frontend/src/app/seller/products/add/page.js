@@ -171,7 +171,7 @@ const AddProductPage = () => {
                   required
                 ></textarea>
                 <div className="text-xs text-[#6b7280] mt-1">
-                  Write a compelling description that highlights the unique features of your jewelry
+                  Write a compelling description that highlights the unique features
                 </div>
                 <div className="text-xs text-[#9ca3af] text-right mt-1">
                   {formData.description.length} / 1000 characters

@@ -281,55 +281,56 @@ const EditProductPage = () => {
               </div>
 
               {/* Product Images */}
-              <div className="bg-white rounded-xl border border-[#e5e7eb] p-6">
-                <h2 className="text-lg font-bold text-[#111827] mb-4 flex items-center gap-2">Product Images</h2>
-                <p className="text-sm text-[#6b7280] mb-4 -mt-3">Upload high-quality images of your jewelry product</p>
-
-                <div
-                  className="border-2 border-dashed border-[#e5e7eb] rounded-xl p-8 text-center bg-gray-50 cursor-pointer transition-all hover:border-[#667eea] hover:bg-[#667eea]/[0.02]"
-                  onClick={() => document.getElementById('fileInput').click()}
-                >
-                  <div className="text-5xl mb-3">Image</div>
-                  <div className="text-base font-semibold text-[#374151] mb-1">Drag & Drop Images Here</div>
-                  <div className="text-sm text-[#6b7280] mb-3">or click to browse</div>
-                  <Button
-                    type="button"
-                    className="bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:opacity-90"
-                  >
-                    Choose Files
-                  </Button>
-                  <div className="text-xs text-[#9ca3af] mt-3">
-                    PNG, JPG, WebP up to 5MB each • Minimum 800x600px
-                  </div>
-                  <Input
-                    type="file"
-                    id="fileInput"
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                    onChange={handleImageChange}
-                  />
-                </div>
-
-                {imagePreview && (
-                  <div className="mt-4">
-                    <div className="relative aspect-square border-2 border-[#e5e7eb] rounded-lg overflow-hidden bg-gray-50 w-40">
-                      <img src={imagePreview} alt="Product Image" className="w-full h-full object-cover rounded-lg" />
-                      <Button
-                        type="button"
-                        size="icon-sm"
-                        variant="ghost"
-                        className="w-7 h-7 bg-white/90 rounded-md flex items-center justify-center text-xs absolute top-2 right-2 hover:bg-red-100 hover:text-red-600"
-                        onClick={() => {
-                          setImageFile(null);
-                          setImagePreview(null);
-                        }}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </div>
+               <div className="bg-white rounded-xl border border-[#e5e7eb] p-6">
+                            <h2 className="text-lg font-bold text-[#111827] mb-4 flex items-center gap-2">📸 Product Images</h2>
+                            <p className="text-sm text-[#6b7280] mb-4 -mt-3">Upload high-quality images of your product</p>
+              
+                            <div
+                              className="border-2 border-dashed border-[#e5e7eb] rounded-xl p-8 text-center bg-gray-50 cursor-pointer transition-all hover:border-[#667eea] hover:bg-[#667eea]/[0.02]"
+                              onClick={() => document.getElementById('fileInput').click()}
+                            >
+                              <div className="text-5xl mb-3">🖼️</div>
+                              <div className="text-base font-semibold text-[#374151] mb-1">Drag & Drop Images Here</div>
+                              <div className="text-sm text-[#6b7280] mb-3">or click to browse</div>
+                              <Button
+                                type="button"
+                                // Remove inline style, use Tailwind/Shadcn defaults or custom classes
+                                className="bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:opacity-90"
+                              >
+                                Choose Files
+                              </Button>
+                              <div className="text-xs text-[#9ca3af] mt-3">
+                                PNG, JPG, WebP up to 5MB each • Minimum 800x600px
+                              </div>
+                              <Input
+                                type="file"
+                                id="fileInput"
+                                accept="image/*"
+                                style={{ display: 'none' }}
+                                onChange={handleImageChange}
+                              />
+                            </div>
+              
+                            {imagePreview && (
+                              <div className="mt-4">
+                                <div className="relative aspect-square border-2 border-[#e5e7eb] rounded-lg overflow-hidden bg-gray-50 w-40">
+                                  <img src={imagePreview} alt="Product Image" className="w-full h-full object-cover rounded-lg" />
+                                  <Button
+                                    type="button"
+                                    size="icon-sm"
+                                    variant="ghost"
+                                    className="w-7 h-7 bg-white/90 rounded-md flex items-center justify-center text-xs absolute top-2 right-2 hover:bg-red-100 hover:text-red-600"
+                                    onClick={() => {
+                                      setImageFile(null);
+                                      setImagePreview(null);
+                                    }}
+                                  >
+                                    🗑️
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
 
               {/* Pricing */}
               <div className="bg-white rounded-xl border border-[#e5e7eb] p-6">
@@ -378,36 +379,33 @@ const EditProductPage = () => {
               </div>
 
               {/* Organization */}
-              <div className="bg-white rounded-xl border border-[#e5e7eb] p-6">
-                <h2 className="text-lg font-bold text-[#111827] mb-4 flex items-center gap-2">Organization</h2>
-
-                <div className="mb-5">
-                  <label htmlFor="productCategory" className="block text-sm font-semibold text-[#374151] mb-2">
-                    Category <span className="text-[#ef4444]">*</span>
-                  </label>
-                  <Select
-                    name="category"
-                    value={formData.category}
-                    onValueChange={(value) => handleSelectChange(value, 'category')}
-                    required
-                  >
-                    <SelectTrigger id="productCategory" className="w-full">
-                      <SelectValue placeholder="Select Category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Necklace Sets">Necklace Sets</SelectItem>
-                      <SelectItem value="Rings">Rings</SelectItem>
-                      <SelectItem value="Earrings">Earrings</SelectItem>
-                      <SelectItem value="Bridal Collections">Bridal Collections</SelectItem>
-                      <SelectItem value="Bracelets">Bracelets</SelectItem>
-                      <SelectItem value="Bangles">Bangles</SelectItem>
-                      <SelectItem value="Chains">Chains</SelectItem>
-                      <SelectItem value="Pendants">Pendants</SelectItem>
-                      <SelectItem value="study">Study</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+             <div className="bg-white rounded-xl border border-[#e5e7eb] p-6">
+                           <h2 className="text-lg font-bold text-[#111827] mb-4 flex items-center gap-2">🏷️ Organization</h2>
+             
+                           <div className="mb-5">
+                             <label htmlFor="productCategory" className="block text-sm font-semibold text-[#374151] mb-2">
+                               Category <span className="text-[#ef4444]">*</span>
+                             </label>
+                             <Select
+                               name="category"
+                               value={formData.category}
+                               onValueChange={(value) => handleSelectChange(value, 'category')}
+                               required
+                             >
+                               <SelectTrigger id="productCategory" className="w-full">
+                                 <SelectValue placeholder="Select Category" />
+                               </SelectTrigger>
+                               <SelectContent>
+                                 <SelectItem value="Necklace Sets">Electronics</SelectItem>
+                                 <SelectItem value="Rings">jewelry</SelectItem>
+                                 <SelectItem value="Earrings">kictchen</SelectItem>
+                                 <SelectItem value="Bridal Collections">Bridal Collections</SelectItem>
+                                 <SelectItem value="Bracelets">Cosmetics</SelectItem>
+                                 <SelectItem value="Bangles">Stationary</SelectItem>
+                               </SelectContent>
+                             </Select>
+                           </div>
+                         </div>
             </div>
 
             {/* Sidebar Preview (Right Column) */}
@@ -418,7 +416,7 @@ const EditProductPage = () => {
                   {imagePreview ? (
                     <img src={imagePreview} alt="Product Preview" className="w-full h-full object-cover rounded-lg" />
                   ) : (
-                    'Image'
+                    ''
                   )}
                 </div>
                 <h3 className="text-base font-semibold text-[#374151] mb-2">{previewName}</h3>
@@ -437,25 +435,25 @@ const EditProductPage = () => {
                 </div>
 
                 <div className="mt-5 pt-5 border-t border-[#e5e7eb]">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-[#374151]">Product Visibility</span>
-                    <label htmlFor="liveCheckbox" className="relative inline-flex items-center cursor-pointer">
-                      <Checkbox
-                        id="liveCheckbox"
-                        name="live"
-                        checked={formData.live}
-                        onCheckedChange={(checked) => handleCheckboxChange(checked, 'live')}
-                        className="peer sr-only"
-                      />
-                      <div
-                        className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"
-                        style={{
-                          backgroundColor: formData.live ? '#667eea' : '#d1d5db',
-                        }}
-                      ></div>
-                    </label>
-                  </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-[#374151]">Product Visibility</span>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="sr-only peer"
+                      name="live"
+                      checked={formData.live}
+                      onChange={handleInputChange}
+                    />
+                    <div
+                      className="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"
+                      style={{
+                        backgroundColor: formData.live ? '#667eea' : '#d1d5db',
+                      }}
+                    ></div>
+                  </label>
                 </div>
+              </div>
 
                 <div className="mt-5 p-4 rounded-lg" style={{ background: 'rgba(102, 126, 234, 0.05)' }}>
                   <h5 className="text-xs font-semibold text-[#667eea] mb-2">Tips for a great listing</h5>
