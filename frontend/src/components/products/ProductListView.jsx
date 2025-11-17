@@ -10,7 +10,7 @@ import {
   PaginationPrevious,
   PaginationNext,
 } from '@/components/ui/pagination';
-import { useRouter } from 'next/navigation'; // Import useRouter
+import { useRouter } from 'next/navigation';
 
 const ProductListView = ({
   products,
@@ -19,8 +19,9 @@ const ProductListView = ({
   onMasterCheckboxChange,
   isAllSelected,
   onDeleteProduct,
+  showActions = true, // New prop, defaults to true
 }) => {
-  const router = useRouter(); // Initialize useRouter
+  const router = useRouter();
 
   return (
     <>
@@ -31,31 +32,37 @@ const ProductListView = ({
         <table className="min-w-full">
           <thead>
             <tr className="bg-gray-50 border-b-2 border-[#e5e7eb]">
-              <th className="py-3 px-4 text-left text-sm font-semibold text-[#374151]">
-                <Checkbox
-                  checked={isAllSelected}
-                  onCheckedChange={onMasterCheckboxChange}
-                />
-              </th>
+              {showActions && ( // Conditionally render master checkbox
+                <th className="py-3 px-4 text-left text-sm font-semibold text-[#374151]">
+                  <Checkbox
+                    checked={isAllSelected}
+                    onCheckedChange={onMasterCheckboxChange}
+                  />
+                </th>
+              )}
               <th className="py-3 px-4 text-left text-sm font-semibold text-[#374151]">Product</th>
               <th className="py-3 px-4 text-left text-sm font-semibold text-[#374151]">SKU</th>
               <th className="py-3 px-4 text-left text-sm font-semibold text-[#374151]">Price</th>
               <th className="py-3 px-4 text-left text-sm font-semibold text-[#374151]">Stock</th>
               <th className="py-3 px-4 text-left text-sm font-semibold text-[#374151]">Status</th>
-              <th className="py-3 px-4 text-left text-sm font-semibold text-[#374151]">Actions</th>
+              {showActions && ( // Conditionally render Actions column header
+                <th className="py-3 px-4 text-left text-sm font-semibold text-[#374151]">Actions</th>
+              )}
             </tr>
           </thead>
           <tbody>
             {products.map((product) => (
               <tr key={product.id} className="border-b border-gray-100 hover:bg-gray-50">
+                {showActions && ( // Conditionally render individual checkboxes
+                  <td className="py-4 px-4">
+                    <Checkbox
+                      checked={selectedProductIds.has(product.id)}
+                      onCheckedChange={(checked) => onCheckboxChange(product.id, checked)}
+                    />
+                  </td>
+                )}
                 <td className="py-4 px-4">
-                  <Checkbox
-                    checked={selectedProductIds.has(product.id)}
-                    onCheckedChange={(checked) => onCheckboxChange(product.id, checked)}
-                  />
-                </td>
-                <td className="py-4 px-4">
-                  <Link href={`/seller/products/view/${product.id}`} className="flex items-center gap-3">
+                  <Link href={showActions ? `/seller/products/view/${product.id}` : '#'} className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center text-2xl flex-shrink-0">
                       {product.imageUrl ? (
                           <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover rounded-md" />
@@ -78,31 +85,33 @@ const ProductListView = ({
                   </span>
                 </td>
                 <td className="py-4 px-4">
-                  <Badge variant={product.live ? 'success' : 'inactive'}> {/* Assuming 'live' from your add page means 'active' status */}
+                  <Badge variant={product.live ? 'success' : 'inactive'}>
                     {product.live ? 'Active' : 'Inactive'}
                   </Badge>
                 </td>
-                <td className="py-4 px-4">
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={() => router.push(`/seller/products/edit/${product.id}`)}
-                    >
-                      ✏️
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDeleteProduct(product.id);
-                      }}
-                    >
-                      🗑️
-                    </Button>
-                  </div>
-                </td>
+                {showActions && ( // Conditionally render Actions column cells
+                  <td className="py-4 px-4">
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => router.push(`/seller/products/edit/${product.id}`)}
+                      >
+                        ✏️
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDeleteProduct(product.id);
+                        }}
+                      >
+                        🗑️
+                      </Button>
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

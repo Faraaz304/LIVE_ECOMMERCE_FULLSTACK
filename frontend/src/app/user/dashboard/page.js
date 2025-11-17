@@ -73,7 +73,7 @@ export default function UserDashboard() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          <Link href="/products">
+          <Link href="/user/products">
             <Card className="hover:shadow-xl transition-all cursor-pointer group">
               <CardContent className="p-6">
                 <div className="flex items-center space-x-4">

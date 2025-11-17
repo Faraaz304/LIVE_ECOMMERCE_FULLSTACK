@@ -16,7 +16,7 @@ const ProductFilterBar = ({
   onSortChange,
   currentView,
   onViewChange,
-  isBulkActionsVisible,
+  showBulkActions = false, // New prop, defaults to false
   onBulkAction,
 }) => {
   return (
@@ -61,6 +61,7 @@ const ProductFilterBar = ({
           </SelectContent>
         </Select>
 
+
         <div className="flex gap-1 bg-gray-100 p-1 rounded-lg">
           <Button
             variant={currentView === 'grid' ? 'outline' : 'ghost'}
@@ -78,7 +79,7 @@ const ProductFilterBar = ({
           </Button>
         </div>
 
-        {isBulkActionsVisible && (
+        {showBulkActions && ( // Conditionally render bulk actions
           <Select onValueChange={onBulkAction}>
             <SelectTrigger className="w-[180px] bg-blue-50 border-blue-200 text-blue-700">
               <SelectValue placeholder="Bulk Actions" />
@@ -86,8 +87,6 @@ const ProductFilterBar = ({
             <SelectContent>
               <SelectItem value="Delete Selected">Delete Selected</SelectItem>
               {/* Add other bulk actions here if needed */}
-              {/* <SelectItem value="Mark Active">Mark Active</SelectItem>
-              <SelectItem value="Mark Inactive">Mark Inactive</SelectItem> */}
             </SelectContent>
           </Select>
         )}

@@ -1,15 +1,30 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react'; // Import useState and useEffect
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
 const ProductCard = ({ product }) => {
   const router = useRouter();
+  const [currentUserRole, setCurrentUserRole] = useState(null); // State to store the user's role
+
+  useEffect(() => {
+    // Read the user's role from localStorage when the component mounts
+    const role = localStorage.getItem('userRole');
+    setCurrentUserRole(role);
+  }, []); // Empty dependency array means this runs once on mount
 
   const handleCardClick = () => {
-    router.push(`/seller/products/view/${product.id}`);
+    let path = `/user/products/view/${product.id}`; // Default path for a general user
+
+    // If the current user is a SELLER, redirect to the seller's specific view page
+    if (currentUserRole === 'SELLER') {
+      path = `/seller/products/view/${product.id}`;
+    }
+    // You could add other role-based logic here if needed (e.g., for ADMIN)
+
+    router.push(path);
   };
 
   return (
@@ -22,14 +37,15 @@ const ProductCard = ({ product }) => {
         {product.imageUrl ? (
           <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
         ) : (
-          product.icon
+          product.icon // Fallback if no image URL, assuming 'icon' exists or display a default placeholder
         )}
 
         <Badge
-          variant={product.status === 'active' ? 'success' : 'inactive'}
+          // Assuming 'product.live' indicates the active status, aligning with Add/Edit pages
+          variant={product.live ? 'success' : 'inactive'}
           className="absolute top-3 right-3"
         >
-          {product.status === 'active' ? 'Active' : 'Inactive'}
+          {product.live ? 'Active' : 'Inactive'}
         </Badge>
       </div>
 
