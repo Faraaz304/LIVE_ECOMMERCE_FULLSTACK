@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react'; // Added useCallback
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import useProducts from '@/hooks/useProducts';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ const ProductsPage = () => {
   // Fetch products on component mount
   useEffect(() => {
     getAllProducts();
-  }, [getAllProducts]); // Dependency array includes getAllProducts
+  }, [getAllProducts]);
 
   // Memoized filter and sort logic to avoid re-calculating on every render
   const filteredAndSortedProducts = useCallback(() => {
@@ -34,8 +34,9 @@ const ProductsPage = () => {
     if (searchTerm) {
       const lowerCaseSearchTerm = searchTerm.toLowerCase();
       currentProducts = currentProducts.filter(product =>
-        product.name.toLowerCase().includes(lowerCaseSearchTerm) ||
-        product.sku.toLowerCase().includes(lowerCaseSearchTerm) // Assuming SKU exists on product
+        // Safely access product.name and product.sku using optional chaining
+        (product.name?.toLowerCase().includes(lowerCaseSearchTerm)) ||
+        (product.sku?.toLowerCase().includes(lowerCaseSearchTerm)) // Assuming SKU exists on product
       );
     }
 
@@ -56,11 +57,15 @@ const ProductsPage = () => {
 
     // Sort products
     currentProducts.sort((a, b) => {
-      if (sortBy === 'newest') return new Date(b.createdAt) - new Date(a.createdAt); // Assuming `createdAt` field
-      if (sortBy === 'oldest') return new Date(a.createdAt) - new Date(b.createdAt);
-      if (sortBy === 'price-low') return a.price - b.price;
-      if (sortBy === 'price-high') return b.price - a.price;
-      if (sortBy === 'name') return a.name.localeCompare(b.name);
+      // Ensure createdAt exists before comparing dates
+      const dateA = a.createdAt ? new Date(a.createdAt) : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt) : 0;
+
+      if (sortBy === 'newest') return dateB - dateA;
+      if (sortBy === 'oldest') return dateA - dateB;
+      if (sortBy === 'price-low') return (a.price ?? 0) - (b.price ?? 0); // Handle null/undefined prices
+      if (sortBy === 'price-high') return (b.price ?? 0) - (a.price ?? 0);
+      if (sortBy === 'name') return (a.name || '').localeCompare(b.name || ''); // Handle null/undefined names
       return 0;
     });
 
@@ -82,7 +87,7 @@ const ProductsPage = () => {
     });
   };
 
-  const handleMasterCheckboxChange = (isChecked) => { // Updated to receive boolean directly
+  const handleMasterCheckboxChange = (isChecked) => {
     if (isChecked) {
       const allProductIds = new Set(displayedProducts.map((p) => p.id));
       setSelectedProductIds(allProductIds);
@@ -101,7 +106,7 @@ const ProductsPage = () => {
           await deleteProduct(id);
         }
         setSelectedProductIds(new Set());
-        getAllProducts(); // Re-fetch products after deletion
+        getAllProducts();
       }
     } else {
       console.log(`Bulk action: ${action} on products:`, Array.from(selectedProductIds));
@@ -113,7 +118,7 @@ const ProductsPage = () => {
     if (window.confirm('Are you sure you want to delete this product?')) {
       const result = await deleteProduct(productId);
       if (result && result.success) {
-        getAllProducts(); // Re-fetch products after deletion
+        getAllProducts();
       }
     }
   };
@@ -167,8 +172,7 @@ const ProductsPage = () => {
 
 
       {/* Conditionally render Grid or List View, or Empty State */}
-      {displayedProducts.length === 0 ? (
-        // Pass a handler for the "Add First Product" button
+      {displayedProducts.length === 0 && !isLoading ? ( // Only show empty state if not loading
         <ProductGridView products={[]} onAddProductClick={handleAddProductClick} />
       ) : (
         currentView === 'grid' ? (
