@@ -1,5 +1,5 @@
 import React from 'react';
-import ProductCard from '@/components/productCard'; // Assuming this path
+import ProductCard from '@/components/products/productCard'; // Assuming this path
 import { useRouter } from 'next/navigation'; // Only if ProductCard or this component needs it directly
 import { Button } from '@/components/ui/button';
 
