@@ -41,7 +41,7 @@ const ProductListView = ({
                 </th>
               )}
               <th className="py-3 px-4 text-left text-sm font-semibold text-[#374151]">Product</th>
-              <th className="py-3 px-4 text-left text-sm font-semibold text-[#374151]">SKU</th>
+              {/* Removed SKU column header */}
               <th className="py-3 px-4 text-left text-sm font-semibold text-[#374151]">Price</th>
               <th className="py-3 px-4 text-left text-sm font-semibold text-[#374151]">Stock</th>
               <th className="py-3 px-4 text-left text-sm font-semibold text-[#374151]">Status</th>
@@ -62,7 +62,10 @@ const ProductListView = ({
                   </td>
                 )}
                 <td className="py-4 px-4">
-                  <Link href={showActions ? `/seller/products/view/${product.id}` : '#'} className="flex items-center gap-3">
+                  <Link
+                    href={showActions ? `/seller/products/view/${product.id}` : `/user/products/view/${product.id}`}
+                    className="flex items-center gap-3"
+                  >
                     <div className="w-12 h-12 bg-gray-50 rounded-lg flex items-center justify-center text-2xl flex-shrink-0">
                       {product.imageUrl ? (
                           <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover rounded-md" />
@@ -73,7 +76,7 @@ const ProductListView = ({
                     <span className="font-medium text-[#374151] text-sm">{product.name}</span>
                   </Link>
                 </td>
-                <td className="py-4 px-4 text-sm text-[#6b7280]">{product.sku}</td>
+                {/* Removed SKU data cell */}
                 <td className="py-4 px-4 text-sm font-medium text-[#111827]">₹{product.price}</td>
                 <td className="py-4 px-4 text-sm">
                   <span

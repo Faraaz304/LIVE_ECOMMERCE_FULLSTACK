@@ -28,7 +28,7 @@ const ProductFilterBar = ({
           </span>
           <Input
             type="text"
-            placeholder="Search by name or SKU..."
+            placeholder="Search by name"
             className="pl-10"
             onChange={(e) => onSearchChange(e.target.value)}
           />
