@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from 'react';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8084'; // Ensure this matches your backend reservation service port if different from 8084
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8088'; // Ensure this matches your backend reservation service port if different from 8084
 
 export const useReservation = () => {
   const [reservations, setReservations] = useState([]);

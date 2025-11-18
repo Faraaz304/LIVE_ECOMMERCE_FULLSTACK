@@ -4,9 +4,6 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
 import { useReservation } from '@/hooks/useReservation';
 import useProducts from '@/hooks/useProducts';
 
@@ -283,7 +280,7 @@ const CreateManualBookingPage = () => {
           <Button variant="outline" type="button" onClick={() => router.back()} disabled={isSubmittingReservation}>Cancel</Button>
           <Button variant="secondary" type="button" disabled={isSubmittingReservation}>Save as Draft</Button>
           <Button
-            className="bg-gradient-to-r from-primary-500 to-[#764ba2] hover:opacity-90"
+            className="from-primary-500 to-[#764ba2] hover:opacity-90"
             type="submit"
             disabled={isSubmittingReservation}
           >

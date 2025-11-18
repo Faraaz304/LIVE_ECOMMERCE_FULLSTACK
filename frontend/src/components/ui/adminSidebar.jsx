@@ -9,7 +9,7 @@ const navItems = [
   { href: '/admin/users', icon: '👥', label: 'Users' },
   { href: '/admin/sellers', icon: '🏪', label: 'Sellers' },
   { href: '/admin/products', icon: '📦', label: 'Products' },
-  { href: '/admin/orders', icon: '🛒', label: 'Orders' },
+  { href: '/admin/reservations', icon: '📅', label: 'Reservations' },
   { href: '/admin/streams', icon: '📺', label: 'Live Streams' },
   { href: '/admin/analytics', icon: '📈', label: 'Analytics' },
   { href: '/admin/settings', icon: '⚙️', label: 'Settings' },
