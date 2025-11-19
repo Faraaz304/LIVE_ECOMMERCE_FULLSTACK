@@ -1,16 +1,13 @@
 package com.example.reservation_service.entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "reservations")
-@Getter
-@Setter
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -20,31 +17,15 @@ public class Reservation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false, updatable = false)
-    private String bookingId;
-
-    @Column(nullable = false)
     private String customerName;
-
-    @Column(nullable = false)
     private String customerPhone;
+    private String customerEmail;
 
-    @Column(nullable = false)
-    private String productName;
+    private String productIds; // "101,102" stored as string
 
-    private int people;
+    private String date;
+    private String time;
 
-    @Column(nullable = false)
-    private String status; // Pending, Confirmed, Cancelled
-
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime startTime;
-
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime endTime;
-
-    @CreationTimestamp
-    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt = LocalDateTime.now();
 }
 
