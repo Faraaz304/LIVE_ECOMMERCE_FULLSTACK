@@ -1,18 +1,23 @@
+// --- START OF FILE page.js ---
+
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { useReservation } from '@/hooks/useReservation'; // Imported Hook
+import { useReservation } from '@/hooks/useReservation';
+import useProducts from '@/hooks/useProducts'; // Import Product Hook
 
-// Import the new components
 import ReservationFilterBar from '@/components/reservation/ReservationFilterBar';
 import ReservationTable from '@/components/reservation/ReservationTable';
 
 const ReservationsPage = () => {
   const router = useRouter();
   
-  // 1. USE HOOK
-  const { reservations, isLoading, error, getAllReservations } = useReservation();
+  // 1. Fetch Reservations
+  const { reservations, isLoading: isLoadingReservations, error, getAllReservations } = useReservation();
+
+  // 2. Fetch Products (to display images in the table)
+  const { products, getAllProducts } = useProducts();
 
   // Filter & Pagination states
   const [selectedReservationIds, setSelectedReservationIds] = useState(new Set());
@@ -23,35 +28,29 @@ const ReservationsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  // Fetch data on mount using the hook
+  // Fetch data on mount
   useEffect(() => {
     getAllReservations();
-  }, [getAllReservations]);
+    getAllProducts(); // Fetch products to resolve IDs to Images
+  }, [getAllReservations, getAllProducts]);
 
 
-  // Pagination Logic
-  const totalReservations = reservations.length;
-  const totalPages = Math.ceil(totalReservations / rowsPerPage);
-
-  // Helper function to format date and time for UI display
+  // --- Helper Functions ---
   const formatDateTime = (isoString) => {
-    if (!isoString) return { date: 'N/A', time: 'N/A' };
+    if (!isoString) return 'N/A';
     try {
       const date = new Date(isoString);
-      const formattedDate = date.toLocaleDateString('en-US', {
-        year: 'numeric',
+      // Format: "Nov 20, 2:30 PM"
+      return date.toLocaleString('en-US', {
         month: 'short',
         day: 'numeric',
-      });
-      const formattedTime = date.toLocaleTimeString('en-US', {
+        year: 'numeric',
         hour: 'numeric',
         minute: '2-digit',
         hour12: true,
       });
-      return { date: formattedDate, time: formattedTime };
     } catch (e) {
-      console.error("Error formatting date:", isoString, e);
-      return { date: 'Invalid', time: 'N/A' };
+      return 'Invalid Date';
     }
   };
 
@@ -70,11 +69,11 @@ const ReservationsPage = () => {
       currentReservations = currentReservations.filter(res =>
         res.customerName?.toLowerCase().includes(lowerCaseSearchTerm) ||
         res.customerPhone?.toLowerCase().includes(lowerCaseSearchTerm) ||
-        res.bookingId?.toLowerCase().includes(lowerCaseSearchTerm)
+        (res.bookingId && res.bookingId.toLowerCase().includes(lowerCaseSearchTerm))
       );
     }
 
-    // Apply date range filter
+    // Apply date filters
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date();
@@ -86,38 +85,24 @@ const ReservationsPage = () => {
         if (!resDate) return false;
         resDate.setHours(0, 0, 0, 0);
 
-        if (activeTab === 'today' || filterDateRange === 'Today') {
-            return resDate.getTime() === today.getTime();
-        }
-        if (activeTab === 'tomorrow' || filterDateRange === 'Tomorrow') {
-            return resDate.getTime() === tomorrow.getTime();
-        }
-        if (activeTab === 'this-week') {
-            const startOfWeek = new Date(today);
-            startOfWeek.setDate(today.getDate() - today.getDay()); 
-            const endOfWeek = new Date(startOfWeek);
-            endOfWeek.setDate(startOfWeek.getDate() + 6);
-            return resDate >= startOfWeek && resDate <= endOfWeek;
-        }
-        if (activeTab === 'past') {
-            return resDate < today;
-        }
+        if (activeTab === 'today' || filterDateRange === 'Today') return resDate.getTime() === today.getTime();
+        if (activeTab === 'tomorrow' || filterDateRange === 'Tomorrow') return resDate.getTime() === tomorrow.getTime();
+        if (activeTab === 'past') return resDate < today;
+        
         return true;
     });
 
     // Apply sort
     currentReservations.sort((a, b) => {
+      const dateA = new Date(a.startTime || a.createdAt);
+      const dateB = new Date(b.startTime || b.createdAt);
+      
       switch (sortBy) {
-        case 'Date (Newest First)':
-          return new Date(b.startTime || b.createdAt) - new Date(a.startTime || a.createdAt);
-        case 'Date (Oldest First)':
-          return new Date(a.startTime || a.createdAt) - new Date(b.startTime || b.createdAt);
-        case 'Customer Name (A-Z)':
-          return (a.customerName || '').localeCompare(b.customerName || '');
-        case 'Customer Name (Z-A)':
-          return (b.customerName || '').localeCompare(a.customerName || '');
-        default:
-          return 0;
+        case 'Date (Newest First)': return dateB - dateA;
+        case 'Date (Oldest First)': return dateA - dateB;
+        case 'Customer Name (A-Z)': return (a.customerName || '').localeCompare(b.customerName || '');
+        case 'Customer Name (Z-A)': return (b.customerName || '').localeCompare(a.customerName || '');
+        default: return 0;
       }
     });
 
@@ -126,70 +111,44 @@ const ReservationsPage = () => {
 
   const displayedReservations = filteredAndSortedReservations();
 
+  // Pagination Slice
   const indexOfLastReservation = currentPage * rowsPerPage;
   const indexOfFirstReservation = indexOfLastReservation - rowsPerPage;
   const currentPaginatedReservations = displayedReservations.slice(indexOfFirstReservation, indexOfLastReservation);
 
+  // Checkbox Logic
   const handleCheckboxChange = (reservationId, isChecked) => {
-    setSelectedReservationIds((prevSelected) => {
-      const newSelected = new Set(prevSelected);
-      if (isChecked) {
-        newSelected.add(reservationId);
-      } else {
-        newSelected.delete(reservationId);
-      }
+    setSelectedReservationIds((prev) => {
+      const newSelected = new Set(prev);
+      isChecked ? newSelected.add(reservationId) : newSelected.delete(reservationId);
       return newSelected;
     });
   };
 
   const handleMasterCheckboxChange = (isChecked) => {
     if (isChecked) {
-      const allReservationIds = new Set(currentPaginatedReservations.map((res) => res.id));
-      setSelectedReservationIds(allReservationIds);
+      setSelectedReservationIds(new Set(currentPaginatedReservations.map((res) => res.id)));
     } else {
       setSelectedReservationIds(new Set());
     }
   };
 
-  const isAllSelected = selectedReservationIds.size === currentPaginatedReservations.length && currentPaginatedReservations.length > 0;
-  const isBulkActionsVisible = selectedReservationIds.size > 0;
+  const isAllSelected = currentPaginatedReservations.length > 0 && selectedReservationIds.size === currentPaginatedReservations.length;
 
-  const handleBulkAction = (action) => {
-    alert(`Bulk action: ${action} on ${selectedReservationIds.size} reservations.`);
-  };
-
-  const onApplyFilters = () => {
-    setCurrentPage(1);
-  };
-
+  const onApplyFilters = () => setCurrentPage(1);
   const onClearFilters = () => {
     setSearchTerm('');
     setActiveTab('all');
-    setFilterDateRange('Custom Range');
     setSortBy('Date (Newest First)');
     setCurrentPage(1);
   };
 
-  const onCalendarViewClick = () => {
-    console.log("Navigating to Calendar View...");
-  };
-
-  if (isLoading) {
-    return (
-      <div className="p-8 max-w-screen-xl mx-auto flex justify-center items-center h-96">
-        <div className="text-gray-500 text-lg">Loading reservations...</div>
-      </div>
-    );
+  if (isLoadingReservations) {
+    return <div className="flex h-screen items-center justify-center text-gray-500">Loading reservations...</div>;
   }
 
   if (error) {
-    return (
-      <div className="p-8 max-w-screen-xl mx-auto">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-            Error: {error}. Please ensure your backend is running on port 8088.
-        </div>
-      </div>
-    );
+    return <div className="p-8 text-red-600 bg-red-50 rounded m-8 border border-red-200">Error: {error}</div>;
   }
 
   return (
@@ -199,13 +158,9 @@ const ReservationsPage = () => {
         setSearchTerm={setSearchTerm}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        filterDateRange={filterDateRange}
-        setFilterDateRange={setFilterDateRange}
         sortBy={sortBy}
         setSortBy={setSortBy}
-        onApplyFilters={onApplyFilters}
         onClearFilters={onClearFilters}
-        onCalendarViewClick={onCalendarViewClick}
       />
 
       <ReservationTable
@@ -215,8 +170,6 @@ const ReservationsPage = () => {
         handleCheckboxChange={handleCheckboxChange}
         handleMasterCheckboxChange={handleMasterCheckboxChange}
         isAllSelected={isAllSelected}
-        isBulkActionsVisible={isBulkActionsVisible}
-        handleBulkAction={handleBulkAction}
         currentPage={currentPage}
         setCurrentPage={setCurrentPage}
         rowsPerPage={rowsPerPage}
@@ -225,6 +178,7 @@ const ReservationsPage = () => {
         totalPages={Math.ceil(displayedReservations.length / rowsPerPage)}
         formatDateTime={formatDateTime}
         getCustomerInitials={getCustomerInitials}
+        products={products} // PASS PRODUCTS TO TABLE
       />
     </div>
   );
