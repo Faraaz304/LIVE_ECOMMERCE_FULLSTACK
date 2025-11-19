@@ -1,12 +1,10 @@
-// --- START OF FILE page.js ---
-
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { useReservation } from '@/hooks/useReservation';
+import { useReservation } from '@/hooks/useReservation'; // Imported Hook
 import useProducts from '@/hooks/useProducts';
 import { CalendarCheck, Users, Package, ChevronRight, Save, X } from 'lucide-react';
 
@@ -18,9 +16,10 @@ import ProductSelectionCard from '@/components/reservation/ProductSelectionCard'
 const CreateManualBookingPage = () => {
   const router = useRouter();
 
-  // Hooks for API interactions
+  // 1. USE HOOKS
   const { products, isLoading: isLoadingProducts, getAllProducts, error: productsError } = useProducts();
-  const { createReservation, isLoading: isSubmittingReservation, error: reservationError } = useReservation();
+  // Use the new hook for creation
+  const { createReservation, isLoading: isSubmitting, error: reservationError } = useReservation();
 
   const [customerDetails, setCustomerDetails] = useState({
     fullName: '',
@@ -31,7 +30,7 @@ const CreateManualBookingPage = () => {
 
   const [reservationDetails, setReservationDetails] = useState({
     selectedDate: '',
-    selectedTimeSlot: null, // { id, time, rawHour, rawMinute }
+    selectedTimeSlot: null, 
   });
 
   const [productSelection, setProductSelection] = useState({
@@ -41,11 +40,11 @@ const CreateManualBookingPage = () => {
 
   const [filteredProducts, setFilteredProducts] = useState([]);
 
-  // --- 1. GENERATE TIME SLOTS (15 Min Intervals) ---
+  // --- GENERATE TIME SLOTS ---
   const timeSlots = useMemo(() => {
     const slots = [];
-    const startHour = 9; // 9:00 AM
-    const endHour = 20;  // 8:00 PM
+    const startHour = 9; 
+    const endHour = 20; 
     let idCounter = 1;
 
     for (let hour = startHour; hour <= endHour; hour++) {
@@ -54,11 +53,8 @@ const CreateManualBookingPage = () => {
 
         const period = hour >= 12 ? 'PM' : 'AM';
         let displayHour = hour;
-        
-        // Convert 24h to 12h format
         if (hour > 12) displayHour = hour - 12;
         if (hour === 0) displayHour = 12; 
-        // 12 PM stays 12, which is correct
 
         const displayMinute = minute.toString().padStart(2, '0');
         const timeString = `${displayHour}:${displayMinute} ${period}`;
@@ -75,7 +71,6 @@ const CreateManualBookingPage = () => {
     return slots;
   }, []);
 
-  // Fetch products
   useEffect(() => {
     getAllProducts();
   }, [getAllProducts]);
@@ -102,10 +97,10 @@ const CreateManualBookingPage = () => {
     setCustomerDetails(prev => ({ ...prev, numberOfPeople: isNaN(value) || value < 1 ? 1 : value }));
   };
 
-  // Summary calculations
   const selectedProductsForSummary = products.filter(p => productSelection.selectedProductIds.has(p.id));
   const estimatedValue = selectedProductsForSummary.reduce((sum, p) => sum + p.rawPrice, 0);
 
+  // --- SUBMIT HANDLER USING HOOK ---
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -114,47 +109,28 @@ const CreateManualBookingPage = () => {
       return;
     }
 
-    let startTime = null;
-    let endTime = null;
-
-    if (reservationDetails.selectedDate && reservationDetails.selectedTimeSlot) {
-      const datePart = new Date(reservationDetails.selectedDate);
-      const { rawHour, rawMinute } = reservationDetails.selectedTimeSlot;
-      
-      datePart.setHours(rawHour);
-      datePart.setMinutes(rawMinute);
-      datePart.setSeconds(0);
-      datePart.setMilliseconds(0);
-
-      startTime = datePart.toISOString().slice(0, 19); 
-      const endDate = new Date(datePart);
-      endDate.setMinutes(endDate.getMinutes() + 30);
-      endTime = endDate.toISOString().slice(0, 19);
-    }
-
-    const apiProductName = selectedProductsForSummary.map(p => p.name).join(', ');
+    const productIdsArray = Array.from(productSelection.selectedProductIds);
 
     const reservationPayload = {
       customerName: customerDetails.fullName,
       customerPhone: customerDetails.phoneNumber,
-      productName: apiProductName || null,
-      people: customerDetails.numberOfPeople,
-      status: 'Pending',
-      startTime: startTime,
-      endTime: endTime,
+      customerEmail: customerDetails.email || "", 
+      productIds: productIdsArray,                
+      date: reservationDetails.selectedDate,      
+      time: reservationDetails.selectedTimeSlot.time 
     };
 
-    try {
-      const result = await createReservation(reservationPayload);
-      if (result && result.success) {
-        alert('Reservation created successfully!');
-        router.push('/seller/reservations');
-      } else {
-        alert(`Failed to create reservation: ${reservationError || 'An unknown error occurred'}`);
-      }
-    } catch (err) {
-      console.error('Error creating reservation:', err);
-      alert(`An unexpected error occurred: ${err.message}`);
+    console.log("Submitting Payload:", JSON.stringify(reservationPayload, null, 2));
+
+    // USE THE HOOK HERE
+    const result = await createReservation(reservationPayload);
+
+    if (result.success) {
+      alert('Reservation created successfully!');
+      router.push('/seller/reservations');
+    } else {
+      // Error is already handled in hook state, but we can alert specifically here
+      alert(`Failed to create reservation: ${result.error}`);
     }
   };
 
@@ -163,7 +139,6 @@ const CreateManualBookingPage = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen pb-20">
-      {/* Header Background */}
       <div className="bg-white border-b border-gray-200 px-8 py-6 mb-8">
         <div className="max-w-screen-xl mx-auto">
           <nav className="flex items-center gap-2 text-sm text-gray-500 mb-4">
@@ -180,20 +155,19 @@ const CreateManualBookingPage = () => {
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             
-            {/* LEFT COLUMN: Form Inputs */}
             <div className="lg:col-span-2 flex flex-col gap-8">
               <CustomerDetailsCard
                 customerDetails={customerDetails}
                 handleCustomerChange={handleCustomerChange}
                 handleNumberOfPeopleChange={handleNumberOfPeopleChange}
-                isSubmittingReservation={isSubmittingReservation}
+                isSubmittingReservation={isSubmitting}
               />
 
               <ReservationDetailsCard
                 reservationDetails={reservationDetails}
                 setReservationDetails={setReservationDetails}
                 timeSlots={timeSlots} 
-                isSubmittingReservation={isSubmittingReservation}
+                isSubmittingReservation={isSubmitting}
               />
 
               <ProductSelectionCard
@@ -201,11 +175,10 @@ const CreateManualBookingPage = () => {
                 setProductSelection={setProductSelection}
                 products={products}
                 filteredProducts={filteredProducts}
-                isSubmittingReservation={isSubmittingReservation}
+                isSubmittingReservation={isSubmitting}
               />
             </div>
 
-            {/* RIGHT COLUMN: Summary */}
             <div className="lg:col-span-1">
               <div className="bg-white rounded-xl p-6 sticky top-8 shadow-sm border border-gray-200 ring-1 ring-gray-100">
                 <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
@@ -248,30 +221,29 @@ const CreateManualBookingPage = () => {
                     </div>
                   </div>
                 </div>
-
-                {/* Mini Submit Button for Sidebar */}
-                <Button 
-                  className="w-full mt-6 bg-primary-600 hover:bg-primary-700 text-white shadow-md" 
-                  type="submit"
-                  disabled={isSubmittingReservation}
-                >
-                  {isSubmittingReservation ? 'Creating...' : 'Confirm Reservation'}
-                </Button>
+                
+                {reservationError && (
+                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded text-xs text-red-600">
+                    {reservationError}
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
-          {/* BOTTOM ACTION BAR */}
           <div className="mt-12 mb-12 py-6 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-end gap-4">
             <span className="text-sm text-gray-500 mr-auto hidden sm:block">
               * Reservation will be set to 'Pending' status automatically.
-            </span>            
+            </span>
+            
+            
             <Button 
               type="submit"
-              disabled={isSubmittingReservation}
-               className="bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:opacity-90"
+              disabled={isSubmitting}
+              className="bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:opacity-90"
+
             >
-              {isSubmittingReservation ? (
+              {isSubmitting ? (
                 <span>Processing...</span>
               ) : (
                 <span className="flex items-center gap-2">
@@ -279,7 +251,6 @@ const CreateManualBookingPage = () => {
                 </span>
               )}
             </Button>
-            
           </div>
         </form>
       </div>

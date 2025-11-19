@@ -98,7 +98,6 @@ const ReservationFilterBar = ({
         </div>
 
         <div className="flex gap-3">
-          <Button onClick={onApplyFilters} className="bg-primary-500 hover:bg-primary-600">Apply Filters</Button>
           <Button variant="outline" onClick={onClearFilters} className="border-gray-300 text-gray-700 hover:bg-gray-50">Clear All</Button>
         </div>
       </div>

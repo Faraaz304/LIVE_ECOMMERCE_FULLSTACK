@@ -1,105 +1,114 @@
-'use client';
-
 import { useState, useCallback } from 'react';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8088'; // Ensure this matches your backend reservation service port if different from 8084
+const BASE_URL = 'http://localhost:8088/api/reservations';
 
 export const useReservation = () => {
   const [reservations, setReservations] = useState([]);
-  const [reservation, setReservation] = useState(null); // For single reservation details
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const clearMessages = () => {
-    setError(null);
-  };
+  // --- Helper: Transform API Data to UI Structure ---
+  const transformReservationData = (data) => {
+    if (!Array.isArray(data)) return [];
 
-  const executeReservationRequest = useCallback(async (method, endpoint, data = null) => {
-    clearMessages();
-    setIsLoading(true);
-
-    try {
-      const config = {
-        method: method,
-        headers: {
-          'Content-Type': 'application/json',
-          // Include authorization token if required for your API
-          // 'Authorization': `Bearer ${localStorage.getItem('accessToken')}`, // Example if token stored in localStorage
-          // For cookie-based auth, 'credentials: "include"' would send it automatically
-        },
-        credentials: 'include', // Important for sending cookies with the request
-      };
-
-      if (data) {
-        config.body = JSON.stringify(data);
-      }
-
-      const response = await fetch(`${API_BASE_URL}/api/reservations${endpoint}`, config);
-      const responseText = await response.text();
-      let result = null;
-
-      if (responseText) {
+    return data.map(item => {
+      // Construct a valid ISO Date string from 'date' and 'time'
+      // API Date: "2025-11-20", Time: "2:30 PM"
+      let constructedStartTime = null;
+      
+      if (item.date && item.time) {
         try {
-          result = JSON.parse(responseText);
-        } catch (parseError) {
-          console.warn(`Backend responded with non-JSON text on ${method} ${endpoint}:`, responseText, parseError);
-          throw new Error(`Server responded unexpectedly. (Raw response: ${responseText.substring(0, 100)})`);
+          const [timePart, modifier] = item.time.split(' '); // ["2:30", "PM"]
+          if (timePart && modifier) {
+            let [hours, minutes] = timePart.split(':').map(Number);
+
+            if (modifier === 'PM' && hours < 12) hours += 12;
+            if (modifier === 'AM' && hours === 12) hours = 0;
+
+            const d = new Date(item.date);
+            d.setHours(hours, minutes, 0);
+            constructedStartTime = d.toISOString();
+          }
+        } catch (e) {
+          console.warn("Error parsing date/time for reservation:", item.id);
         }
       }
 
-      if (!response.ok) {
-        throw new Error(result?.message || `Reservation operation failed. Status: ${response.status} ${response.statusText}.`);
-      }
+      return {
+        id: item.id,
+        // Generate a display ID
+        bookingId: `RES-${String(item.id).padStart(6, '0')}`, 
+        customerName: item.customerName,
+        customerPhone: item.customerPhone,
+        customerEmail: item.customerEmail,
+        // Format productIds for display since names aren't in this API
+        productName: item.productIds ? `Item IDs: ${item.productIds}` : 'No Products', 
+        // API doesn't return people count in list, defaulting to 1
+        people: item.people || 1, 
+        // API doesn't return status, defaulting to Pending
+        status: item.status || 'Pending', 
+        startTime: constructedStartTime, 
+        // End time approximated (+30 mins) for display sorting
+        endTime: constructedStartTime, 
+        createdAt: item.createdAt
+      };
+    });
+  };
 
-      return result;
+  // --- GET: Fetch All Reservations ---
+  const getAllReservations = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(BASE_URL);
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      const data = await response.json();
+      const formattedData = transformReservationData(data);
+      setReservations(formattedData);
     } catch (err) {
-      console.error(`Error during reservation operation (${method} ${endpoint}):`, err);
-      setError(err.message || 'An unknown error occurred.');
-      return null;
+      console.error("Failed to fetch reservations:", err);
+      setError(err.message);
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  const createReservation = useCallback(async (reservationData) => {
-    const result = await executeReservationRequest('POST', '', reservationData);
-    if (result) {
-      // Optionally update reservations state if you want real-time updates without re-fetching all
-      // setReservations(prev => [...prev, result]);
-      return { success: true, data: result };
-    }
-    return { success: false, error: error }; // 'error' state is already set by executeReservationRequest
-  }, [executeReservationRequest, error]);
+  // --- POST: Create Reservation ---
+  const createReservation = useCallback(async (payload) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(BASE_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
 
-  const getAllReservations = useCallback(async () => {
-    const result = await executeReservationRequest('GET', '');
-    if (result) {
-      setReservations(result);
-      return { success: true, data: result };
-    }
-    return { success: false, error: error };
-  }, [executeReservationRequest, error]);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || `Server error: ${response.status}`);
+      }
 
-  // Optional: Fetch a single reservation by ID if you have such an endpoint (e.g., /api/reservations/{id})
-  const getReservationById = useCallback(async (id) => {
-    const result = await executeReservationRequest('GET', `/${id}`);
-    if (result) {
-      setReservation(result);
-      return { success: true, data: result };
+      const data = await response.json();
+      return { success: true, data };
+    } catch (err) {
+      console.error("Failed to create reservation:", err);
+      setError(err.message);
+      return { success: false, error: err.message };
+    } finally {
+      setIsLoading(false);
     }
-    setReservation(null);
-    return { success: false, error: error };
-  }, [executeReservationRequest, error]);
-
+  }, []);
 
   return {
     reservations,
-    reservation,
     isLoading,
     error,
-    createReservation,
     getAllReservations,
-    getReservationById, // Optional
-    clearMessages,
+    createReservation
   };
 };
