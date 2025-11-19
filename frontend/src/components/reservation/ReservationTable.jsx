@@ -1,8 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input'; // Although not used directly, might be part of Shadcn setup
 import { Checkbox } from '@/components/ui/checkbox';
-import { Badge } from '@/components/ui/badge'; // Although Status Badge is removed, Badge component might be used for other purposes
 import {
   Select,
   SelectContent,

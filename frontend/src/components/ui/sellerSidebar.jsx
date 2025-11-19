@@ -8,7 +8,7 @@ const navItems = [
   { href: '/seller/dashboard', icon: '📊', label: 'Dashboard' },
   { href: '/seller/products', icon: '📦', label: 'Products' },
   { href: '/seller/orders', icon: '🛒', label: 'Orders' },
-  { href: '/seller/reservations', icon: '📅', label: 'Reservations' },
+  { href: '/seller/reservations/booking', icon: '📅', label: 'Reservations' },
   { href: '/seller/streams', icon: '📺', label: 'Live Streams' },
   { href: '/seller/analytics', icon: '📈', label: 'Analytics' },
   { href: '/seller/settings', icon: '⚙️', label: 'Settings' },

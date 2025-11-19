@@ -1,87 +1,133 @@
+// --- START OF FILE ReservationDetailsCard.jsx ---
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { cn } from '@/lib/utils'; // Assuming cn utility
+import { cn } from '@/lib/utils';
+import { Calendar, Clock } from 'lucide-react'; // Make sure lucide-react is installed, or replace with emoji
 
-const mockTimeSlots = [
-  { id: '1', time: '10:00 AM', capacity: 2, isAvailable: true },
-  { id: '2', time: '10:30 AM', capacity: 2, isAvailable: true },
-  { id: '3', time: '11:00 AM', capacity: 2, isAvailable: true },
-  { id: '4', time: '11:30 AM', capacity: 1, isAvailable: true },
-  { id: '5', time: '12:00 PM', capacity: 0, isAvailable: false }, // Unavailable
-  { id: '6', time: '12:30 PM', capacity: 2, isAvailable: true },
-  { id: '7', time: '1:00 PM', capacity: 2, isAvailable: true },
-  { id: '8', time: '1:30 PM', capacity: 2, isAvailable: true },
-  { id: '9', time: '2:00 PM', capacity: 2, isAvailable: true },
-  { id: '10', time: '2:30 PM', capacity: 2, isAvailable: true },
-  { id: '11', time: '3:00 PM', capacity: 2, isAvailable: true },
-  { id: '12', time: '3:30 PM', capacity: 2, isAvailable: true },
-];
+const ReservationDetailsCard = ({ 
+  reservationDetails, 
+  setReservationDetails, 
+  timeSlots, // Receive generated slots from parent
+  isSubmittingReservation 
+}) => {
 
-const ReservationDetailsCard = ({ reservationDetails, setReservationDetails, isSubmittingReservation }) => {
-  const handleTimeSlotSelect = (id, isAvailable) => {
-    if (isAvailable) {
+  const handleTimeSlotSelect = (slot) => {
+    if (slot.isAvailable) {
       setReservationDetails(prev => ({
         ...prev,
-        selectedTimeSlotId: prev.selectedTimeSlotId === id ? null : id, // Toggle selection
+        // If clicking the currently selected slot, deselect it (set to null), else select new
+        selectedTimeSlot: prev.selectedTimeSlot?.id === slot.id ? null : slot,
       }));
     }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-3 text-xl font-bold text-gray-900">
-          <span>📅</span> Reservation Details
+    <Card className="w-full shadow-sm border border-gray-200">
+      <CardHeader className="pb-4 border-b border-gray-100">
+        <CardTitle className="flex items-center gap-2 text-xl font-bold text-gray-900">
+          <span>📅</span> Schedule Visit
         </CardTitle>
-        <CardDescription className="text-sm text-gray-500">
-          Select date and time for the visit
+        <CardDescription>
+          Select your preferred date and time slot.
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid grid-cols-1 gap-6">
-        <div className="flex flex-col gap-2">
-          <label htmlFor="selectedDate" className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-            Select Date <span className="text-error-500">*</span>
-          </label>
-          <Input
-            type="date"
-            id="selectedDate"
-            name="selectedDate"
-            value={reservationDetails.selectedDate}
-            onChange={e => setReservationDetails(prev => ({ ...prev, selectedDate: e.target.value }))}
-            required
-            className="w-full"
-            disabled={isSubmittingReservation}
-          />
-          <span className="text-xs text-gray-500">Choose a date for the reservation</span>
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
-            Select Time Slot <span className="text-error-500">*</span>
-          </label>
-          <span className="text-xs text-gray-500">Available time slots for the selected date</span>
-
-          <div className="grid grid-cols-fill-140 gap-3 mt-4">
-            {mockTimeSlots.map(slot => (
-              <div
-                key={slot.id}
-                className={cn(
-                  "p-3 border-2 rounded-md text-center cursor-pointer transition-all",
-                  slot.id === reservationDetails.selectedTimeSlotId
-                    ? "border-primary-500 bg-primary-500 text-white"
-                    : slot.isAvailable
-                      ? "border-gray-200 bg-white hover:border-primary-500 hover:bg-primary-500/[0.05]"
-                      : "border-gray-200 bg-gray-50 opacity-40 cursor-not-allowed"
-                )}
-                onClick={() => handleTimeSlotSelect(slot.id, slot.isAvailable)}
-                aria-disabled={!slot.isAvailable || isSubmittingReservation}
-                tabIndex={slot.isAvailable && !isSubmittingReservation ? 0 : -1}
-              >
-                <div className="font-semibold text-sm mb-1">{slot.time}</div>
-                <div className="text-xs">{slot.capacity} spots left</div>
+      
+      <CardContent className="p-0">
+        <div className="flex flex-col md:flex-row h-full md:h-[400px]">
+          
+          {/* LEFT SIDE: DATE SELECTION */}
+          <div className="w-full md:w-1/2 p-6 border-b md:border-b-0 md:border-r border-gray-100 bg-white">
+            <label className="text-sm font-semibold text-gray-700 mb-4 flex items-center gap-2">
+              <Calendar className="w-4 h-4" /> Select Date
+            </label>
+            
+            <div className="relative">
+              <Input
+                type="date"
+                id="selectedDate"
+                name="selectedDate"
+                value={reservationDetails.selectedDate}
+                onChange={e => setReservationDetails(prev => ({ ...prev, selectedDate: e.target.value, selectedTimeSlot: null }))}
+                required
+                className="w-full p-4 text-lg border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all"
+                disabled={isSubmittingReservation}
+              />
+              
+              <div className="mt-8 p-4 bg-blue-50 rounded-md border border-blue-100">
+                <h4 className="text-sm font-semibold text-blue-800 mb-1">Booking Info</h4>
+                <p className="text-xs text-blue-600 leading-relaxed">
+                  • All times are in your local timezone.<br/>
+                  • Please select a date to view available time slots.<br/>
+                  • Slots are available every 15 minutes.
+                </p>
               </div>
-            ))}
+            </div>
+          </div>
+
+          {/* RIGHT SIDE: TIME SELECTION (Zoom Style) */}
+          <div className="w-full md:w-1/2 flex flex-col bg-gray-50">
+            <div className="p-4 border-b border-gray-200 bg-white shadow-sm z-10 flex justify-between items-center">
+              <label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                <Clock className="w-4 h-4" /> Select Time
+              </label>
+              <span className="text-xs font-medium px-2 py-1 bg-gray-100 text-gray-600 rounded">
+                15 min intervals
+              </span>
+            </div>
+
+            {/* Scrollable Area */}
+            <div className="flex-1 overflow-y-auto p-3 custom-scrollbar">
+              {!reservationDetails.selectedDate ? (
+                <div className="h-full flex flex-col items-center justify-center text-gray-400 text-sm gap-2">
+                  <Calendar className="w-8 h-8 opacity-20" />
+                  <span>Please select a date first</span>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {timeSlots.map((slot) => {
+                     const isSelected = reservationDetails.selectedTimeSlot?.id === slot.id;
+                     
+                     return (
+                      <button
+                        key={slot.id}
+                        type="button"
+                        onClick={() => handleTimeSlotSelect(slot)}
+                        disabled={!slot.isAvailable || isSubmittingReservation}
+                        className={cn(
+                          "group relative w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 border",
+                          
+                          // SELECTED STATE: High contrast (Blue background, White text)
+                          isSelected 
+                            ? "bg-blue-600 text-white border-blue-600 shadow-md ring-1 ring-blue-600 scale-[1.02]" 
+                            : "bg-white text-gray-700 border-gray-200 hover:border-blue-400 hover:shadow-sm hover:text-blue-600",
+                          
+                          // DISABLED STATE
+                          (!slot.isAvailable) && "opacity-50 bg-gray-100 text-gray-400 cursor-not-allowed hover:border-gray-200 hover:shadow-none hover:text-gray-400"
+                        )}
+                      >
+                        <span className="flex items-center gap-2">
+                           {slot.time}
+                        </span>
+                        
+                        {/* Checkmark for selected state */}
+                        {isSelected && (
+                          <span className="bg-white/20 p-0.5 rounded-full">
+                             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7"></path>
+                             </svg>
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                  
+                  {/* Spacer for bottom scrolling */}
+                  <div className="h-4"></div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </CardContent>

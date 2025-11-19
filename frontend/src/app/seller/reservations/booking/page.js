@@ -1,32 +1,19 @@
+// --- START OF FILE page.js ---
+
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useReservation } from '@/hooks/useReservation';
 import useProducts from '@/hooks/useProducts';
+import { CalendarCheck, Users, Package, ChevronRight, Save, X } from 'lucide-react';
 
-// Import the new sub-components
+// Import the sub-components
 import CustomerDetailsCard from '@/components/reservation/CustomerDetailsCard';
 import ReservationDetailsCard from '@/components/reservation/ReservationDetailsCard';
 import ProductSelectionCard from '@/components/reservation/ProductSelectionCard';
-
-// Mock data for demonstration (only time slots remain, products will be from API)
-const mockTimeSlots = [
-  { id: '1', time: '10:00 AM', capacity: 2, isAvailable: true },
-  { id: '2', time: '10:30 AM', capacity: 2, isAvailable: true },
-  { id: '3', time: '11:00 AM', capacity: 2, isAvailable: true },
-  { id: '4', time: '11:30 AM', capacity: 1, isAvailable: true },
-  { id: '5', time: '12:00 PM', capacity: 0, isAvailable: false }, // Unavailable
-  { id: '6', time: '12:30 PM', capacity: 2, isAvailable: true },
-  { id: '7', time: '1:00 PM', capacity: 2, isAvailable: true },
-  { id: '8', time: '1:30 PM', capacity: 2, isAvailable: true },
-  { id: '9', time: '2:00 PM', capacity: 2, isAvailable: true },
-  { id: '10', time: '2:30 PM', capacity: 2, isAvailable: true },
-  { id: '11', time: '3:00 PM', capacity: 2, isAvailable: true },
-  { id: '12', time: '3:30 PM', capacity: 2, isAvailable: true },
-];
 
 const CreateManualBookingPage = () => {
   const router = useRouter();
@@ -44,7 +31,7 @@ const CreateManualBookingPage = () => {
 
   const [reservationDetails, setReservationDetails] = useState({
     selectedDate: '',
-    selectedTimeSlotId: null,
+    selectedTimeSlot: null, // { id, time, rawHour, rawMinute }
   });
 
   const [productSelection, setProductSelection] = useState({
@@ -52,28 +39,58 @@ const CreateManualBookingPage = () => {
     selectedProductIds: new Set(),
   });
 
-  // Removed additionalInfo and confirmationSettings states as per request
+  const [filteredProducts, setFilteredProducts] = useState([]);
 
-  const [filteredProducts, setFilteredProducts] = useState([]); // Will be populated by useProducts
+  // --- 1. GENERATE TIME SLOTS (15 Min Intervals) ---
+  const timeSlots = useMemo(() => {
+    const slots = [];
+    const startHour = 9; // 9:00 AM
+    const endHour = 20;  // 8:00 PM
+    let idCounter = 1;
 
-  // Fetch all products on component mount
+    for (let hour = startHour; hour <= endHour; hour++) {
+      for (let minute = 0; minute < 60; minute += 15) {
+        if (hour === endHour && minute > 0) break;
+
+        const period = hour >= 12 ? 'PM' : 'AM';
+        let displayHour = hour;
+        
+        // Convert 24h to 12h format
+        if (hour > 12) displayHour = hour - 12;
+        if (hour === 0) displayHour = 12; 
+        // 12 PM stays 12, which is correct
+
+        const displayMinute = minute.toString().padStart(2, '0');
+        const timeString = `${displayHour}:${displayMinute} ${period}`;
+
+        slots.push({
+          id: `slot-${idCounter++}`,
+          time: timeString,
+          rawHour: hour,
+          rawMinute: minute,
+          isAvailable: true,
+        });
+      }
+    }
+    return slots;
+  }, []);
+
+  // Fetch products
   useEffect(() => {
     getAllProducts();
   }, [getAllProducts]);
 
-  // Update filtered products when products from API load or search term changes
   useEffect(() => {
     let currentProducts = products;
     if (productSelection.searchTerm) {
-      const lowerCaseSearchSearchTerm = productSelection.searchTerm.toLowerCase(); // Corrected variable name
+      const lowerCaseSearch = productSelection.searchTerm.toLowerCase();
       currentProducts = currentProducts.filter(p =>
-        p.name?.toLowerCase().includes(lowerCaseSearchSearchTerm) ||
-        p.sku?.toLowerCase().includes(lowerCaseSearchSearchTerm)
+        p.name?.toLowerCase().includes(lowerCaseSearch) ||
+        p.sku?.toLowerCase().includes(lowerCaseSearch)
       );
     }
     setFilteredProducts(currentProducts);
   }, [products, productSelection.searchTerm]);
-
 
   const handleCustomerChange = (e) => {
     const { name, value } = e.target;
@@ -86,51 +103,43 @@ const CreateManualBookingPage = () => {
   };
 
   // Summary calculations
-  const selectedTimeSlot = mockTimeSlots.find(slot => slot.id === reservationDetails.selectedTimeSlotId);
   const selectedProductsForSummary = products.filter(p => productSelection.selectedProductIds.has(p.id));
-  const estimatedValue = selectedProductsForSummary.reduce((sum, p) => sum + p.rawPrice, 0); // Use rawPrice for calculation
+  const estimatedValue = selectedProductsForSummary.reduce((sum, p) => sum + p.rawPrice, 0);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Basic validation
-    if (!customerDetails.fullName || !customerDetails.phoneNumber || !reservationDetails.selectedDate || !reservationDetails.selectedTimeSlotId) {
-      alert('Please fill in all required fields (Full Name, Phone Number, Date, Time Slot).');
+    
+    if (!customerDetails.fullName || !customerDetails.phoneNumber || !reservationDetails.selectedDate || !reservationDetails.selectedTimeSlot) {
+      alert('Please fill in all required fields: Full Name, Phone Number, Date, and Time.');
       return;
     }
 
-    // --- Date and Time Formatting for Backend API ---
     let startTime = null;
     let endTime = null;
 
-    if (reservationDetails.selectedDate && selectedTimeSlot) {
-      const [time, period] = selectedTimeSlot.time.split(' '); // e.g., "10:30", "AM"
-      let [hours, minutes] = time.split(':').map(Number);
+    if (reservationDetails.selectedDate && reservationDetails.selectedTimeSlot) {
+      const datePart = new Date(reservationDetails.selectedDate);
+      const { rawHour, rawMinute } = reservationDetails.selectedTimeSlot;
+      
+      datePart.setHours(rawHour);
+      datePart.setMinutes(rawMinute);
+      datePart.setSeconds(0);
+      datePart.setMilliseconds(0);
 
-      if (period === 'PM' && hours !== 12) {
-        hours += 12;
-      }
-      if (period === 'AM' && hours === 12) { // Midnight (12 AM)
-        hours = 0;
-      }
-
-      const selectedDateTime = new Date(`${reservationDetails.selectedDate}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`);
-      startTime = selectedDateTime.toISOString().slice(0, 19); // "YYYY-MM-DDTHH:mm:ss"
-
-      // Assuming each slot is 30 minutes for endTime calculation
-      selectedDateTime.setMinutes(selectedDateTime.getMinutes() + 30);
-      endTime = selectedDateTime.toISOString().slice(0, 19);
+      startTime = datePart.toISOString().slice(0, 19); 
+      const endDate = new Date(datePart);
+      endDate.setMinutes(endDate.getMinutes() + 30);
+      endTime = endDate.toISOString().slice(0, 19);
     }
-    // --- End Date and Time Formatting ---
 
-    // Concatenate selected product names for the single productName field in the API
     const apiProductName = selectedProductsForSummary.map(p => p.name).join(', ');
 
     const reservationPayload = {
       customerName: customerDetails.fullName,
       customerPhone: customerDetails.phoneNumber,
-      productName: apiProductName || null, // Can be null if no products selected
+      productName: apiProductName || null,
       people: customerDetails.numberOfPeople,
-      status: 'Pending', // Hardcoded as per API example
+      status: 'Pending',
       startTime: startTime,
       endTime: endTime,
     };
@@ -139,7 +148,7 @@ const CreateManualBookingPage = () => {
       const result = await createReservation(reservationPayload);
       if (result && result.success) {
         alert('Reservation created successfully!');
-        router.push('/seller/reservations'); // Redirect to reservations list
+        router.push('/seller/reservations');
       } else {
         alert(`Failed to create reservation: ${reservationError || 'An unknown error occurred'}`);
       }
@@ -149,151 +158,131 @@ const CreateManualBookingPage = () => {
     }
   };
 
-  if (isLoadingProducts) {
-    return (
-      <div className="bg-gray-50 p-8 max-w-screen-xl mx-auto flex items-center justify-center h-[calc(100vh-100px)]">
-        <p className="text-xl text-gray-600">Loading products...</p>
-      </div>
-    );
-  }
-
-  if (productsError) {
-    return (
-      <div className="bg-gray-50 p-8 max-w-screen-xl mx-auto flex items-center justify-center h-[calc(100vh-100px)]">
-        <p className="text-xl text-error-500">Error loading products: {productsError}</p>
-      </div>
-    );
-  }
+  if (isLoadingProducts) return <div className="h-screen flex items-center justify-center text-gray-500">Loading products...</div>;
+  if (productsError) return <div className="h-screen flex items-center justify-center text-red-500">Error: {productsError}</div>;
 
   return (
-    <div className="bg-gray-50 p-8 max-w-screen-xl mx-auto">
-      {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link href="/seller/reservations" className="text-primary-500 hover:underline">
-          Reservations
-        </Link>
-        <span>›</span>
-        <span>Create Manual Reservation</span>
-      </nav>
-
-      {/* Page Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Manual Reservation</h1>
-        <p className="text-base text-gray-600">Create a reservation for walk-in customers or phone inquiries. All fields marked with * are required.</p>
-      </div>
-
-      {/* Info Banner */}
-      <div className="
-        flex items-start gap-3 p-4 rounded-md mb-8
-        bg-gradient-to-r from-[rgba(102,126,234,0.1)] to-[rgba(118,75,162,0.1)]
-        border-l-4 border-primary-500
-      ">
-        <span className="text-xl text-primary-500">ℹ️</span>
-        <div className="flex-1 text-gray-700 text-sm">
-          <strong>Note:</strong> Manual reservations are automatically confirmed. Customer will receive SMS/WhatsApp confirmation if you enable it below.
+    <div className="bg-gray-50 min-h-screen pb-20">
+      {/* Header Background */}
+      <div className="bg-white border-b border-gray-200 px-8 py-6 mb-8">
+        <div className="max-w-screen-xl mx-auto">
+          <nav className="flex items-center gap-2 text-sm text-gray-500 mb-4">
+            <Link href="/seller/reservations" className="hover:text-primary-600 transition-colors">Reservations</Link>
+            <ChevronRight className="w-4 h-4" />
+            <span className="text-gray-900 font-medium">Create Manual</span>
+          </nav>
+          <h1 className="text-3xl font-bold text-gray-900">Create Manual Reservation</h1>
+          <p className="text-gray-500 mt-1">Enter customer details and schedule an appointment.</p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit}>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 flex flex-col gap-6">
+      <div className="max-w-screen-xl mx-auto px-8">
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            {/* LEFT COLUMN: Form Inputs */}
+            <div className="lg:col-span-2 flex flex-col gap-8">
+              <CustomerDetailsCard
+                customerDetails={customerDetails}
+                handleCustomerChange={handleCustomerChange}
+                handleNumberOfPeopleChange={handleNumberOfPeopleChange}
+                isSubmittingReservation={isSubmittingReservation}
+              />
 
-            {/* Customer Details Card */}
-            <CustomerDetailsCard
-              customerDetails={customerDetails}
-              handleCustomerChange={handleCustomerChange}
-              handleNumberOfPeopleChange={handleNumberOfPeopleChange}
-              isSubmittingReservation={isSubmittingReservation}
-            />
+              <ReservationDetailsCard
+                reservationDetails={reservationDetails}
+                setReservationDetails={setReservationDetails}
+                timeSlots={timeSlots} 
+                isSubmittingReservation={isSubmittingReservation}
+              />
 
-            {/* Reservation Details Card */}
-            <ReservationDetailsCard
-              reservationDetails={reservationDetails}
-              setReservationDetails={setReservationDetails}
-              isSubmittingReservation={isSubmittingReservation}
-            />
+              <ProductSelectionCard
+                productSelection={productSelection}
+                setProductSelection={setProductSelection}
+                products={products}
+                filteredProducts={filteredProducts}
+                isSubmittingReservation={isSubmittingReservation}
+              />
+            </div>
 
-            {/* Product Selection Card */}
-            <ProductSelectionCard
-              productSelection={productSelection}
-              setProductSelection={setProductSelection}
-              products={products} // Pass all products
-              filteredProducts={filteredProducts} // Pass filtered products
-              isSubmittingReservation={isSubmittingReservation}
-            />
+            {/* RIGHT COLUMN: Summary */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-xl p-6 sticky top-8 shadow-sm border border-gray-200 ring-1 ring-gray-100">
+                <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+                  <span className="bg-primary-50 text-primary-600 p-1 rounded">📋</span> 
+                  Reservation Summary
+                </h2>
+                
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3 pb-4 border-b border-gray-100">
+                    <Users className="w-5 h-5 text-gray-400 mt-0.5" />
+                    <div>
+                      <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Customer</p>
+                      <p className="text-sm font-semibold text-gray-900">{customerDetails.fullName || 'Not entered'}</p>
+                      <p className="text-xs text-gray-500">{customerDetails.phoneNumber}</p>
+                    </div>
+                  </div>
 
-            {/* Removed: Special Requests Card */}
-            {/* Removed: Confirmation Settings Card */}
+                  <div className="flex items-start gap-3 pb-4 border-b border-gray-100">
+                    <CalendarCheck className="w-5 h-5 text-gray-400 mt-0.5" />
+                    <div>
+                      <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Date & Time</p>
+                      <p className="text-sm font-semibold text-gray-900">{reservationDetails.selectedDate || 'Select Date'}</p>
+                      <p className="text-sm font-bold text-primary-600">
+                        {reservationDetails.selectedTimeSlot ? reservationDetails.selectedTimeSlot.time : 'Select Time'}
+                      </p>
+                    </div>
+                  </div>
 
-          </div>
+                  <div className="flex items-start gap-3">
+                    <Package className="w-5 h-5 text-gray-400 mt-0.5" />
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center">
+                        <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Products</p>
+                        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{selectedProductsForSummary.length}</span>
+                      </div>
+                      <div className="mt-1 flex justify-between items-baseline">
+                        <span className="text-sm text-gray-600">Estimated Value</span>
+                        <span className="text-lg font-bold text-gray-900">₹{estimatedValue.toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-          {/* Summary Box (Right Column) */}
-          <div className="lg:col-span-1">
-            <div className="
-              bg-gradient-to-br from-[rgba(102,126,234,0.1)] to-[rgba(118,75,162,0.1)]
-              rounded-md p-6 sticky top-8
-            ">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">📋 Reservation Summary</h2>
-              <div className="flex flex-col gap-0.5">
-                <div className="flex justify-between py-3 border-b border-[rgba(0,0,0,0.1)]">
-                  <span className="text-sm text-gray-600">Customer Name</span>
-                  <span className="text-sm font-semibold text-gray-900">{customerDetails.fullName || '-'}</span>
-                </div>
-                <div className="flex justify-between py-3 border-b border-[rgba(0,0,0,0.1)]">
-                  <span className="text-sm text-gray-600">Phone Number</span>
-                  <span className="text-sm font-semibold text-gray-900">{customerDetails.phoneNumber || '-'}</span>
-                </div>
-                <div className="flex justify-between py-3 border-b border-[rgba(0,0,0,0.1)]">
-                  <span className="text-sm text-gray-600">Date & Time</span>
-                  <span className="text-sm font-semibold text-gray-900">
-                    {reservationDetails.selectedDate ? new Date(reservationDetails.selectedDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '-'} at {selectedTimeSlot?.time || '-'}
-                  </span>
-                </div>
-                <div className="flex justify-between py-3 border-b border-[rgba(0,0,0,0.1)]">
-                  <span className="text-sm text-gray-600">Number of People</span>
-                  <span className="text-sm font-semibold text-gray-900">{customerDetails.numberOfPeople}</span>
-                </div>
-                <div className="flex justify-between py-3 border-b border-[rgba(0,0,0,0.1)]">
-                  <span className="text-sm text-gray-600">Products Selected</span>
-                  <span className="text-sm font-semibold text-gray-900">{selectedProductsForSummary.length} products</span>
-                </div>
-                <div className="flex justify-between py-3 border-b border-[rgba(0,0,0,0.1)]">
-                  <span className="text-sm text-gray-600">Estimated Value</span>
-                  <span className="text-lg font-bold text-primary-500">₹{estimatedValue.toLocaleString('en-IN')}</span>
-                </div>
-                <div className="flex justify-between py-3">
-                  <span className="text-sm text-gray-600">Status</span>
-                  <span className="text-sm font-semibold text-success-500">Auto-Confirmed ✓</span>
-                </div>
+                {/* Mini Submit Button for Sidebar */}
+                <Button 
+                  className="w-full mt-6 bg-primary-600 hover:bg-primary-700 text-white shadow-md" 
+                  type="submit"
+                  disabled={isSubmittingReservation}
+                >
+                  {isSubmittingReservation ? 'Creating...' : 'Confirm Reservation'}
+                </Button>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Fixed Actions (now part of the form flow, not fixed to viewport) */}
-        <div className="
-          w-full
-          bg-white border-t-2 border-gray-200 py-6 px-8 mt-6
-          flex justify-end gap-3
-          shadow-md
-        ">
-          <Button variant="outline" type="button" onClick={() => router.back()} disabled={isSubmittingReservation}>Cancel</Button>
-          <Button variant="secondary" type="button" disabled={isSubmittingReservation}>Save as Draft</Button>
-          <Button
-            className="from-primary-500 to-[#764ba2] hover:opacity-90"
-            type="submit"
-            disabled={isSubmittingReservation}
-          >
-            <span>✓</span> {isSubmittingReservation ? 'Creating...' : 'Create Reservation'}
-          </Button>
-        </div>
-      </form>
-      {reservationError && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mt-4" role="alert">
-          <strong className="font-bold">Error!</strong>
-          <span className="block sm:inline"> {reservationError}</span>
-        </div>
-      )}
+          {/* BOTTOM ACTION BAR */}
+          <div className="mt-12 mb-12 py-6 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-end gap-4">
+            <span className="text-sm text-gray-500 mr-auto hidden sm:block">
+              * Reservation will be set to 'Pending' status automatically.
+            </span>            
+            <Button 
+              type="submit"
+              disabled={isSubmittingReservation}
+               className="bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:opacity-90"
+            >
+              {isSubmittingReservation ? (
+                <span>Processing...</span>
+              ) : (
+                <span className="flex items-center gap-2">
+                   Create Reservation <ChevronRight className="w-4 h-4" />
+                </span>
+              )}
+            </Button>
+            
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
