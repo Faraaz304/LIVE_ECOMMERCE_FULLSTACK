@@ -17,40 +17,22 @@ import java.util.List;
 public class ReservationServiceImpl implements ReservationService {
 
     private final ReservationRepository repo;
-    private final ProductClient productClient;  // 🔥 inject feign client
+    private final ProductClient productClient;
 
     @Override
     public Reservation createReservation(ReservationRequest request) {
 
-        // 🔹 Check products before save
-        if (request.getProductIds() != null) {
-
-            for (String productIdStr : request.getProductIds()) {
-                Long productId = Long.parseLong(productIdStr.trim());
-
-                // 1️⃣ Fetch product from product-service
-                ProductDTO product = productClient.getProductById(productId);
-
-                if (product == null) {
-                    throw new RuntimeException("Invalid product ID: " + productId);
-                }
-
-                // 2️⃣ Check stock
-                if (product.getStock() <= 0) {
-                    throw new RuntimeException("Product out of stock: " + productId);
-                }
-
-                // 3️⃣ Reduce stock in product-service
-                productClient.reduceStock(productId, 1);
-            }
-        }
-
-        // 🔹 Save Reservation
+        // 🔹 Save Reservation - productIds is optional
         Reservation r = new Reservation();
         r.setCustomerName(request.getCustomerName());
         r.setCustomerPhone(request.getCustomerPhone());
         r.setCustomerEmail(request.getCustomerEmail());
-        r.setProductIds(String.join(",", request.getProductIds()));
+        
+        // Handle null/empty productIds
+        if (request.getProductIds() != null && !request.getProductIds().isEmpty()) {
+            r.setProductIds(String.join(",", request.getProductIds()));
+        }
+        
         r.setDate(request.getDate());
         r.setTime(request.getTime());
         r.setCreatedAt(LocalDateTime.now());
