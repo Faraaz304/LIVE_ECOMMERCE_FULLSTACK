@@ -123,7 +123,7 @@ const CreateManualBookingPage = () => {
 
     if (result.success) {
       alert('Reservation created successfully!');
-      router.push('/seller/reservations');
+      router.push('/seller/products');
     } else {
       alert(`Failed to create reservation: ${result.error}`);
     }
