@@ -100,6 +100,16 @@ const CreateManualBookingPage = () => {
   // --- SUBMIT HANDLER USING HOOK ---
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    
+  // --- PHONE NUMBER VALIDATION (ADD THIS) ---
+  const phone = customerDetails.phoneNumber;
+  const phoneRegex = /^[0-9]{10}$/;
+
+  if (!phoneRegex.test(phone)) {
+    alert("Phone number must be 10 digits and numbers only.");
+    return;
+  }
     
     if (!customerDetails.fullName || !customerDetails.phoneNumber || !reservationDetails.selectedDate || !reservationDetails.selectedTimeSlot) {
       alert('Please fill in all required fields: Full Name, Phone Number, Date, and Time.');
@@ -188,7 +198,7 @@ const CreateManualBookingPage = () => {
 
           <div className="mt-12 mb-12 py-6 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-end gap-4">
             <span className="text-sm text-gray-500 mr-auto hidden sm:block">
-              * Reservation will be set to 'Pending' status automatically.
+              * Reservation will be set to confirmed status automatically.
             </span>
             
             <Button 
