@@ -3,14 +3,12 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
-  Play, 
   Calendar, 
   Users, 
   Clock, 
   TrendingUp, 
   MoreHorizontal, 
   Video, 
-  ArrowUpRight, 
   Eye, 
   ShoppingBag,
   Radio

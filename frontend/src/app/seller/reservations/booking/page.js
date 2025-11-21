@@ -1,18 +1,17 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useReservation } from '@/hooks/useReservation';
 import useProducts from '@/hooks/useProducts';
-import { ChevronRight } from 'lucide-react';
+import { ChevronLeft, CheckCircle2, AlertCircle } from 'lucide-react';
 
 // Import the sub-components
 import CustomerDetailsCard from '@/components/reservation/CustomerDetailsCard';
 import ReservationDetailsCard from '@/components/reservation/ReservationDetailsCard';
 import ProductSelectionCard from '@/components/reservation/ProductSelectionCard';
-import ReservationSummaryCard from '@/components/reservation/ReservationSummaryCard'; // Imported new component
+import ReservationSummaryCard from '@/components/reservation/ReservationSummaryCard';
 
 const CreateManualBookingPage = () => {
   const router = useRouter();
@@ -25,7 +24,6 @@ const CreateManualBookingPage = () => {
     fullName: '',
     phoneNumber: '',
     email: '',
-    // Removed numberOfPeople
   });
 
   const [reservationDetails, setReservationDetails] = useState({
@@ -50,7 +48,6 @@ const CreateManualBookingPage = () => {
     for (let hour = startHour; hour <= endHour; hour++) {
       for (let minute = 0; minute < 60; minute += 15) {
         if (hour === endHour && minute > 0) break;
-
         const period = hour >= 12 ? 'PM' : 'AM';
         let displayHour = hour;
         if (hour > 12) displayHour = hour - 12;
@@ -92,24 +89,20 @@ const CreateManualBookingPage = () => {
     setCustomerDetails(prev => ({ ...prev, [name]: value }));
   };
 
-  // Removed handleNumberOfPeopleChange function
-
   const selectedProductsForSummary = products.filter(p => productSelection.selectedProductIds.has(p.id));
   const estimatedValue = selectedProductsForSummary.reduce((sum, p) => sum + p.rawPrice, 0);
 
-  // --- SUBMIT HANDLER USING HOOK ---
+  // --- SUBMIT HANDLER ---
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    
-  // --- PHONE NUMBER VALIDATION (ADD THIS) ---
-  const phone = customerDetails.phoneNumber;
-  const phoneRegex = /^[0-9]{10}$/;
+    const phone = customerDetails.phoneNumber;
+    const phoneRegex = /^[0-9]{10}$/;
 
-  if (!phoneRegex.test(phone)) {
-    alert("Phone number must be 10 digits and numbers only.");
-    return;
-  }
+    if (!phoneRegex.test(phone)) {
+      alert("Phone number must be 10 digits and numbers only.");
+      return;
+    }
     
     if (!customerDetails.fullName || !customerDetails.phoneNumber || !reservationDetails.selectedDate || !reservationDetails.selectedTimeSlot) {
       alert('Please fill in all required fields: Full Name, Phone Number, Date, and Time.');
@@ -127,40 +120,39 @@ const CreateManualBookingPage = () => {
       time: reservationDetails.selectedTimeSlot.time 
     };
 
-    console.log("Submitting Payload:", JSON.stringify(reservationPayload, null, 2));
-
     const result = await createReservation(reservationPayload);
 
     if (result.success) {
-      alert('Reservation created successfully!');
       router.push('/seller/products');
     } else {
       alert(`Failed to create reservation: ${result.error}`);
     }
   };
 
-  if (isLoadingProducts) return <div className="h-screen flex items-center justify-center text-gray-500">Loading products...</div>;
-  if (productsError) return <div className="h-screen flex items-center justify-center text-red-500">Error: {productsError}</div>;
+  if (isLoadingProducts) return <div className="h-screen flex items-center justify-center text-slate-500 bg-slate-50">Loading products...</div>;
+  if (productsError) return <div className="h-screen flex items-center justify-center text-red-500 bg-slate-50 flex-col gap-2"><AlertCircle /> Error: {productsError}</div>;
 
   return (
-    <div className="bg-gray-50 min-h-screen pb-20">
-      <div className="bg-white border-b border-gray-200 px-8 py-6 mb-8">
-        <div className="max-w-screen-xl mx-auto">
-          <nav className="flex items-center gap-2 text-sm text-gray-500 mb-4">
-            <Link href="/seller/reservations" className="hover:text-primary-600 transition-colors">Reservations</Link>
-            <ChevronRight className="w-4 h-4" />
-            <span className="text-gray-900 font-medium">Create Manual</span>
-          </nav>
-          <h1 className="text-3xl font-bold text-gray-900">Create Manual Reservation</h1>
-          <p className="text-gray-500 mt-1">Enter customer details and schedule an appointment.</p>
+    <div className="bg-slate-50/50 min-h-screen pb-24">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-200 sticky top-0 z-30 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center gap-4">
+          <Button variant="ghost" size="icon" className="text-slate-500 hover:text-slate-900" onClick={() => router.back()}>
+            <ChevronLeft className="w-5 h-5" />
+          </Button>
+          <div>
+            <h1 className="text-xl font-bold text-slate-900">New Reservation</h1>
+            <p className="text-xs text-slate-500">Create a manual booking for a walk-in or phone customer</p>
+          </div>
         </div>
       </div>
 
-      <div className="max-w-screen-xl mx-auto px-8">
+      <div className="max-w-7xl mx-auto px-6 mt-8">
         <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
-            <div className="lg:col-span-2 flex flex-col gap-8">
+            {/* Left Column: Forms */}
+            <div className="lg:col-span-8 space-y-8">
               <CustomerDetailsCard
                 customerDetails={customerDetails}
                 handleCustomerChange={handleCustomerChange}
@@ -183,37 +175,39 @@ const CreateManualBookingPage = () => {
               />
             </div>
 
-            {/* Right Column: Summary Component */}
-            <div className="lg:col-span-1">
-              <ReservationSummaryCard
-                customerDetails={customerDetails}
-                reservationDetails={reservationDetails}
-                selectedProductsCount={selectedProductsForSummary.length}
-                estimatedValue={estimatedValue}
-                isSubmitting={isSubmitting}
-                submitError={reservationError}
-              />
+            {/* Right Column: Sticky Summary */}
+            <div className="lg:col-span-4">
+              <div className="sticky top-24 space-y-6">
+                <ReservationSummaryCard
+                  customerDetails={customerDetails}
+                  reservationDetails={reservationDetails}
+                  selectedProductsCount={selectedProductsForSummary.length}
+                  estimatedValue={estimatedValue}
+                  isSubmitting={isSubmitting}
+                  submitError={reservationError}
+                />
+                
+                <Button 
+                  type="submit"
+                  size="lg"
+                  disabled={isSubmitting}
+                  className="w-full bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/10 h-12 text-base"
+                >
+                  {isSubmitting ? (
+                    <span className="flex items-center gap-2">
+                       Processing...
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-2">
+                       Confirm Reservation <CheckCircle2 className="w-5 h-5" />
+                    </span>
+                  )}
+                </Button>
+                <p className="text-xs text-center text-slate-400">
+                  By clicking confirm, the reservation status will be set to <strong>Confirmed</strong> automatically.
+                </p>
+              </div>
             </div>
-          </div>
-
-          <div className="mt-12 mb-12 py-6 border-t border-gray-200 flex flex-col sm:flex-row items-center justify-end gap-4">
-            <span className="text-sm text-gray-500 mr-auto hidden sm:block">
-              * Reservation will be set to confirmed status automatically.
-            </span>
-            
-            <Button 
-              type="submit"
-              disabled={isSubmitting}
-              className="bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:opacity-90"
-            >
-              {isSubmitting ? (
-                <span>Processing...</span>
-              ) : (
-                <span className="flex items-center gap-2">
-                   Create Reservation <ChevronRight className="w-4 h-4" />
-                </span>
-              )}
-            </Button>
           </div>
         </form>
       </div>
