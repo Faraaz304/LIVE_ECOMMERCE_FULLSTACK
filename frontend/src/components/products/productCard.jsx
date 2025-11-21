@@ -1,69 +1,109 @@
 'use client';
 
-import React, { useState, useEffect } from 'react'; // Import useState and useEffect
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Box } from 'lucide-react';
+
+// Safe price formatter — NEVER produces NaN
+const formatPrice = (price) => {
+  if (!price) return price;
+
+  const clean = price.toString().replace(/,/g, "").trim();
+
+  // If price is too large for JS number, return as-is (string)
+  if (clean.length > 15) return clean;
+
+  const num = Number(clean);
+  return isNaN(num) ? price : num.toLocaleString("en-IN");
+};
 
 const ProductCard = ({ product }) => {
   const router = useRouter();
-  const [currentUserRole, setCurrentUserRole] = useState(null); // State to store the user's role
+  const [currentUserRole, setCurrentUserRole] = useState(null);
 
   useEffect(() => {
-    // Read the user's role from localStorage when the component mounts
-    const role = localStorage.getItem('userRole');
-    setCurrentUserRole(role);
-  }, []); // Empty dependency array means this runs once on mount
+    const storedRole = localStorage.getItem('userRole');
+    setCurrentUserRole(storedRole);
+  }, []);
 
   const handleCardClick = () => {
-    let path = `/user/products/view/${product.id}`; // Default path for a general user
-
-    // If the current user is a SELLER, redirect to the seller's specific view page
+    let path = `/user/products/view/${product.id}`;
     if (currentUserRole === 'SELLER') {
       path = `/seller/products/view/${product.id}`;
     }
-    // You could add other role-based logic here if needed (e.g., for ADMIN)
-
     router.push(path);
   };
 
   return (
     <Card
-      key={product.id}
-      className="overflow-hidden transition-all duration-300 hover:shadow-md hover:-translate-y-px cursor-pointer"
+      className="group overflow-hidden border-slate-200 hover:border-slate-300 hover:shadow-lg transition-all duration-300 cursor-pointer bg-white flex flex-col h-full"
       onClick={handleCardClick}
     >
-      <div className="relative bg-gray-50 h-52 flex items-center justify-center text-6xl">
+      {/* Image */}
+      <div className="relative aspect-[4/3] bg-slate-100 overflow-hidden">
         {product.imageUrl ? (
-          <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+          <img
+            src={product.imageUrl}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
         ) : (
-          product.icon // Fallback if no image URL, assuming 'icon' exists or display a default placeholder
+          <div className="w-full h-full flex items-center justify-center text-slate-300">
+            <Box className="w-12 h-12" />
+          </div>
         )}
 
-        <Badge
-          // Assuming 'product.live' indicates the active status, aligning with Add/Edit pages
-          variant={product.live ? 'success' : 'inactive'}
-          className="absolute top-3 right-3"
-        >
-          {product.live ? 'Active' : 'Inactive'}
-        </Badge>
+        {/* Status Badge */}
+        <div className="absolute top-3 right-3">
+          {product.live ? (
+            <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white border-0 shadow-sm">
+              Active
+            </Badge>
+          ) : (
+            <Badge className="bg-slate-900/70 text-white hover:bg-slate-900/80 border-0 backdrop-blur-sm">
+              Inactive
+            </Badge>
+          )}
+        </div>
       </div>
 
-      <CardContent className="p-4">
-        <h3 className="text-base font-semibold text-[#374151] mb-2 truncate">
+      {/* Content */}
+      <CardContent className="p-4 flex flex-col flex-grow">
+        {/* Product Title */}
+        <h3 className="font-semibold text-slate-900 line-clamp-2 leading-tight group-hover:text-indigo-600 transition-colors mb-2">
           {product.name}
         </h3>
-        <div className="text-2xl font-bold text-[#667eea] mb-2">₹{product.price}</div>
-        <div className="flex justify-between items-center text-sm text-[#6b7280]">
-          <span>
-            Stock:{' '}
-            <span
-              className={`font-semibold ${
-                product.stock === 0 ? 'text-[#ef4444]' : 'text-[#374151]'
+
+        {/* Price */}
+        <div className="flex items-baseline gap-1 mb-3">
+          <span className="text-lg font-bold text-slate-900">
+            ₹{formatPrice(product.price)}
+          </span>
+        </div>
+
+        {/* Footer Row */}
+        <div className="flex items-center justify-between text-xs pt-3 mt-auto border-t border-slate-100">
+          <div className="flex items-center gap-1.5">
+            <div
+              className={`w-2 h-2 rounded-full ${
+                product.stock > 0 ? 'bg-emerald-500' : 'bg-red-500'
               }`}
+            />
+            <span
+              className={
+                product.stock > 0
+                  ? 'text-slate-600'
+                  : 'text-red-600 font-medium'
+              }
             >
-              {product.stock}
+              {product.stock > 0 ? `${product.stock} in stock` : 'Out of stock'}
             </span>
+          </div>
+
+          <span className="text-slate-400">
+            {product.category || 'Uncategorized'}
           </span>
         </div>
       </CardContent>
@@ -72,3 +112,4 @@ const ProductCard = ({ product }) => {
 };
 
 export default ProductCard;
+

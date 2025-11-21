@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import useProducts from '@/hooks/useProducts';
 import { Button } from '@/components/ui/button';
+import { Plus, Package } from 'lucide-react'; // Icons
 
 // Import the new components
 import ProductFilterBar from '@/components/products/ProductFilterBar';
@@ -21,12 +22,11 @@ const ProductsPage = () => {
   const [filterCategory, setFilterCategory] = useState('all');
   const [sortBy, setSortBy] = useState('newest');
 
-  // Fetch products on component mount
   useEffect(() => {
     getAllProducts();
   }, [getAllProducts]);
 
-  // Memoized filter and sort logic to avoid re-calculating on every render
+  // Memoized filter and sort logic
   const filteredAndSortedProducts = useCallback(() => {
     let currentProducts = products || [];
 
@@ -34,9 +34,8 @@ const ProductsPage = () => {
     if (searchTerm) {
       const lowerCaseSearchTerm = searchTerm.toLowerCase();
       currentProducts = currentProducts.filter(product =>
-        // Safely access product.name and product.sku using optional chaining
         (product.name?.toLowerCase().includes(lowerCaseSearchTerm)) ||
-        (product.sku?.toLowerCase().includes(lowerCaseSearchTerm)) // Assuming SKU exists on product
+        (product.sku?.toLowerCase().includes(lowerCaseSearchTerm))
       );
     }
 
@@ -57,15 +56,14 @@ const ProductsPage = () => {
 
     // Sort products
     currentProducts.sort((a, b) => {
-      // Ensure createdAt exists before comparing dates
       const dateA = a.createdAt ? new Date(a.createdAt) : 0;
       const dateB = b.createdAt ? new Date(b.createdAt) : 0;
 
       if (sortBy === 'newest') return dateB - dateA;
       if (sortBy === 'oldest') return dateA - dateB;
-      if (sortBy === 'price-low') return (a.price ?? 0) - (b.price ?? 0); // Handle null/undefined prices
+      if (sortBy === 'price-low') return (a.price ?? 0) - (b.price ?? 0);
       if (sortBy === 'price-high') return (b.price ?? 0) - (a.price ?? 0);
-      if (sortBy === 'name') return (a.name || '').localeCompare(b.name || ''); // Handle null/undefined names
+      if (sortBy === 'name') return (a.name || '').localeCompare(b.name || '');
       return 0;
     });
 
@@ -74,15 +72,11 @@ const ProductsPage = () => {
 
   const displayedProducts = filteredAndSortedProducts();
 
-
   const handleCheckboxChange = (productId, isChecked) => {
     setSelectedProductIds((prevSelected) => {
       const newSelected = new Set(prevSelected);
-      if (isChecked) {
-        newSelected.add(productId);
-      } else {
-        newSelected.delete(productId);
-      }
+      if (isChecked) newSelected.add(productId);
+      else newSelected.delete(productId);
       return newSelected;
     });
   };
@@ -108,9 +102,6 @@ const ProductsPage = () => {
         setSelectedProductIds(new Set());
         getAllProducts();
       }
-    } else {
-      console.log(`Bulk action: ${action} on products:`, Array.from(selectedProductIds));
-      alert(`Bulk action "${action}" not implemented yet.`);
     }
   };
 
@@ -127,67 +118,76 @@ const ProductsPage = () => {
     router.push('/seller/products/add');
   };
 
-
   if (isLoading) {
-    return (
-      <div className="p-8 flex-1 flex items-center justify-center bg-[#f9fafb]">
-        <p className="text-xl text-[#6b7280]">Loading products...</p>
-      </div>
-    );
+    return <div className="h-screen flex items-center justify-center bg-slate-50 text-slate-500">Loading products...</div>;
   }
 
   if (error) {
-    return (
-      <div className="p-8 flex-1 flex items-center justify-center bg-[#f9fafb]">
-        <p className="text-xl text-[#ef4444]">{error}</p>
-      </div>
-    );
+    return <div className="h-screen flex items-center justify-center bg-slate-50 text-red-500">Error: {error}</div>;
   }
 
   return (
-    <div className="p-8 flex-1">
-      {/* Page Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-[#111827]">Products</h1>
-        <Button
-          size="lg"
-          onClick={handleAddProductClick}
-          className="bg-gradient-to-r from-[#667eea] to-[#764ba2] hover:opacity-90"
-        >
-          ➕ Add Product
-        </Button>
-      </div>
+    <div className="min-h-screen bg-slate-50/50 p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Inventory</h1>
+            <p className="text-slate-500 text-sm mt-1">Manage your product catalog, prices, and stock levels.</p>
+          </div>
+          <Button
+            size="lg"
+            onClick={handleAddProductClick}
+            className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20"
+          >
+            <Plus className="w-4 h-4 mr-2" /> Add Product
+          </Button>
+        </div>
 
-      {/* Filter Bar */}
-      <ProductFilterBar
-        onSearchChange={setSearchTerm}
-        onStatusFilterChange={setFilterStatus}
-        onCategoryFilterChange={setFilterCategory}
-        onSortChange={setSortBy}
-        currentView={currentView}
-        onViewChange={setCurrentView}
-        isBulkActionsVisible={isBulkActionsVisible}
-        onBulkAction={handleBulkAction}
-      />
+        {/* Filter Bar */}
+        <ProductFilterBar
+          onSearchChange={setSearchTerm}
+          onStatusFilterChange={setFilterStatus}
+          onCategoryFilterChange={setFilterCategory}
+          onSortChange={setSortBy}
+          currentView={currentView}
+          onViewChange={setCurrentView}
+          showBulkActions={isBulkActionsVisible}
+          onBulkAction={handleBulkAction}
+        />
 
-
-      {/* Conditionally render Grid or List View, or Empty State */}
-      {displayedProducts.length === 0 && !isLoading ? ( // Only show empty state if not loading
-        <ProductGridView products={[]} onAddProductClick={handleAddProductClick} />
-      ) : (
-        currentView === 'grid' ? (
-          <ProductGridView products={displayedProducts} />
+        {/* Content Area */}
+        {displayedProducts.length === 0 ? (
+          <div className="bg-white rounded-xl border border-dashed border-slate-300 p-20 text-center">
+            <div className="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Package className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-1">
+              {searchTerm || filterStatus !== 'all' ? 'No matching products' : 'No products found'}
+            </h3>
+            <p className="text-slate-500 mb-6 text-sm max-w-md mx-auto">
+               {searchTerm || filterStatus !== 'all' ? 'Try adjusting your filters or search query.' : 'Get started by adding your first product to the inventory.'}
+            </p>
+            <Button variant="outline" onClick={handleAddProductClick}>
+              Add New Product
+            </Button>
+          </div>
         ) : (
-          <ProductListView
-            products={displayedProducts}
-            selectedProductIds={selectedProductIds}
-            onCheckboxChange={handleCheckboxChange}
-            onMasterCheckboxChange={handleMasterCheckboxChange}
-            isAllSelected={isAllSelected}
-            onDeleteProduct={handleDeleteProduct}
-          />
-        )
-      )}
+          currentView === 'grid' ? (
+            <ProductGridView products={displayedProducts} onAddProductClick={handleAddProductClick} />
+          ) : (
+            <ProductListView
+              products={displayedProducts}
+              selectedProductIds={selectedProductIds}
+              onCheckboxChange={handleCheckboxChange}
+              onMasterCheckboxChange={handleMasterCheckboxChange}
+              isAllSelected={isAllSelected}
+              onDeleteProduct={handleDeleteProduct}
+            />
+          )
+        )}
+      </div>
     </div>
   );
 };
