@@ -22,31 +22,31 @@ export default function SellerDashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Seller Dashboard</h1>
-          <p className="text-gray-600 mt-2">Manage your products and track your sales</p>
+          <h1 className="text-3xl font-bold text-foreground">Seller Dashboard</h1>
+          <p className="text-muted-foreground mt-2">Manage your products and track your sales</p>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
-            <p className="text-gray-600 text-sm font-medium">My Products</p>
-            <p className="text-3xl font-bold text-purple-600 mt-2">{stats.myProducts}</p>
+          <div className="bg-card rounded-lg shadow-md p-6 border-l-4 border-primary">
+            <p className="text-muted-foreground text-sm font-medium">My Products</p>
+            <p className="text-3xl font-bold text-primary mt-2">{stats.myProducts}</p>
           </div>
-          <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-orange-500">
-            <p className="text-gray-600 text-sm font-medium">Pending Orders</p>
-            <p className="text-3xl font-bold text-orange-600 mt-2">{stats.pendingOrders}</p>
+          <div className="bg-card rounded-lg shadow-md p-6 border-l-4 border-chart-1">
+            <p className="text-muted-foreground text-sm font-medium">Pending Orders</p>
+            <p className="text-3xl font-bold text-chart-1 mt-2">{stats.pendingOrders}</p>
           </div>
-          <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
-            <p className="text-gray-600 text-sm font-medium">Total Sales</p>
-            <p className="text-3xl font-bold text-green-600 mt-2">{stats.totalSales}</p>
+          <div className="bg-card rounded-lg shadow-md p-6 border-l-4 border-chart-5">
+            <p className="text-muted-foreground text-sm font-medium">Total Sales</p>
+            <p className="text-3xl font-bold text-chart-5 mt-2">{stats.totalSales}</p>
           </div>
-          <div className="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
-            <p className="text-gray-600 text-sm font-medium">Monthly Revenue</p>
-            <p className="text-3xl font-bold text-blue-600 mt-2">${stats.monthlyRevenue}</p>
+          <div className="bg-card rounded-lg shadow-md p-6 border-l-4 border-chart-2">
+            <p className="text-muted-foreground text-sm font-medium">Monthly Revenue</p>
+            <p className="text-3xl font-bold text-chart-2 mt-2">${stats.monthlyRevenue}</p>
           </div>
         </div>
 
@@ -54,40 +54,40 @@ export default function SellerDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <Link
             href="/seller/products/add"
-            className="bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-all"
+            className="bg-primary text-primary-foreground rounded-lg shadow-md p-8 hover:shadow-lg transition-all"
           >
             <div className="flex items-center space-x-4">
-              <div className="bg-white/20 rounded-full p-4">
+              <div className="bg-primary-foreground/20 rounded-full p-4">
                 <span className="text-4xl">➕</span>
               </div>
               <div>
                 <h3 className="text-xl font-bold">Add New Product</h3>
-                <p className="text-blue-100 mt-1">List a new item for sale</p>
+                <p className="text-primary-foreground/80 mt-1">List a new item for sale</p>
               </div>
             </div>
           </Link>
 
           <Link
             href="/seller/products"
-            className="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition-all border-2 border-gray-200"
+            className="bg-card rounded-lg shadow-md p-8 hover:shadow-lg transition-all border-2 border-border"
           >
             <div className="flex items-center space-x-4">
-              <div className="bg-purple-100 rounded-full p-4">
+              <div className="bg-accent rounded-full p-4">
                 <span className="text-4xl">📦</span>
               </div>
               <div>
-                <h3 className="text-xl font-bold text-gray-900">My Products</h3>
-                <p className="text-gray-600 mt-1">View and manage your listings</p>
+                <h3 className="text-xl font-bold text-card-foreground">My Products</h3>
+                <p className="text-muted-foreground mt-1">View and manage your listings</p>
               </div>
             </div>
           </Link>
         </div>
 
         {/* Recent Orders */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="bg-card rounded-lg shadow-md p-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-gray-900">Recent Orders</h2>
-            <Link href="/seller/orders" className="text-purple-600 hover:text-purple-700 font-medium">
+            <h2 className="text-xl font-bold text-card-foreground">Recent Orders</h2>
+            <Link href="/seller/orders" className="text-primary hover:text-primary/80 font-medium">
               View All →
             </Link>
           </div>
@@ -122,20 +122,20 @@ export default function SellerDashboard() {
 
 function OrderItem({ orderId, product, customer, amount, status }) {
   const statusColors = {
-    Pending: 'bg-yellow-100 text-yellow-800',
-    Shipped: 'bg-blue-100 text-blue-800',
-    Delivered: 'bg-green-100 text-green-800',
+    Pending: 'bg-muted text-muted-foreground',
+    Shipped: 'bg-chart-2/20 text-chart-2',
+    Delivered: 'bg-chart-5/20 text-chart-5',
   };
 
   return (
-    <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+    <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg hover:bg-muted transition-colors">
       <div className="flex-1">
-        <p className="font-semibold text-gray-900">{orderId}</p>
-        <p className="text-sm text-gray-600">{product}</p>
-        <p className="text-xs text-gray-500 mt-1">Customer: {customer}</p>
+        <p className="font-semibold text-foreground">{orderId}</p>
+        <p className="text-sm text-muted-foreground">{product}</p>
+        <p className="text-xs text-muted-foreground mt-1">Customer: {customer}</p>
       </div>
       <div className="text-right">
-        <p className="font-bold text-gray-900">{amount}</p>
+        <p className="font-bold text-foreground">{amount}</p>
         <span className={`inline-block px-3 py-1 rounded-full text-xs font-medium mt-1 ${statusColors[status]}`}>
           {status}
         </span>

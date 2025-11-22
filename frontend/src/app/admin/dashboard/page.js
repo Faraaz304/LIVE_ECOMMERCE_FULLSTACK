@@ -23,12 +23,12 @@ export default function AdminDashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen bg-background p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2">Welcome back! Here's what's happening today.</p>
+          <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
+          <p className="text-muted-foreground mt-2">Welcome back! Here's what's happening today.</p>
         </div>
 
         {/* Stats Grid */}
@@ -37,31 +37,31 @@ export default function AdminDashboard() {
             title="Total Users"
             value={stats.totalUsers}
             icon="👥"
-            color="bg-blue-500"
+            color="bg-chart-2"
           />
           <StatCard
             title="Total Products"
             value={stats.totalProducts}
             icon="📦"
-            color="bg-green-500"
+            color="bg-chart-5"
           />
           <StatCard
             title="Total Orders"
             value={stats.totalOrders}
             icon="🛒"
-            color="bg-purple-500"
+            color="bg-primary"
           />
           <StatCard
             title="Revenue"
-            value={`$${stats.totalRevenue.toLocaleString()}`}
+            value={`${stats.totalRevenue.toLocaleString()}`}
             icon="💰"
-            color="bg-yellow-500"
+            color="bg-chart-1"
           />
         </div>
 
         {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
+        <div className="bg-card rounded-lg shadow-md p-6 mb-8">
+          <h2 className="text-xl font-semibold text-card-foreground mb-4">Quick Actions</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <ActionButton
               href="/admin/users"
@@ -85,8 +85,8 @@ export default function AdminDashboard() {
         </div>
 
         {/* Recent Activity */}
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
+        <div className="bg-card rounded-lg shadow-md p-6">
+          <h2 className="text-xl font-semibold text-card-foreground mb-4">Recent Activity</h2>
           <div className="space-y-4">
             <ActivityItem
               title="New order received"
@@ -112,11 +112,11 @@ export default function AdminDashboard() {
 
 function StatCard({ title, value, icon, color }) {
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
+    <div className="bg-card rounded-lg shadow-md p-6">
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-gray-600 text-sm">{title}</p>
-          <p className="text-2xl font-bold mt-2">{value}</p>
+          <p className="text-muted-foreground text-sm">{title}</p>
+          <p className="text-2xl font-bold text-card-foreground mt-2">{value}</p>
         </div>
         <div className={`${color} w-12 h-12 rounded-full flex items-center justify-center text-2xl`}>
           {icon}
@@ -130,13 +130,13 @@ function ActionButton({ href, title, description, icon }) {
   return (
     <Link
       href={href}
-      className="block p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:shadow-md transition-all"
+      className="block p-4 border border-border rounded-lg hover:border-primary hover:shadow-md transition-all"
     >
       <div className="flex items-start space-x-3">
         <span className="text-2xl">{icon}</span>
         <div>
-          <h3 className="font-semibold text-gray-900">{title}</h3>
-          <p className="text-sm text-gray-600 mt-1">{description}</p>
+          <h3 className="font-semibold text-foreground">{title}</h3>
+          <p className="text-sm text-muted-foreground mt-1">{description}</p>
         </div>
       </div>
     </Link>
@@ -145,12 +145,12 @@ function ActionButton({ href, title, description, icon }) {
 
 function ActivityItem({ title, description, time }) {
   return (
-    <div className="flex items-start space-x-3 pb-4 border-b border-gray-200 last:border-0">
-      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+    <div className="flex items-start space-x-3 pb-4 border-b border-border last:border-0">
+      <div className="w-2 h-2 bg-primary rounded-full mt-2"></div>
       <div className="flex-1">
-        <p className="font-medium text-gray-900">{title}</p>
-        <p className="text-sm text-gray-600">{description}</p>
-        <p className="text-xs text-gray-400 mt-1">{time}</p>
+        <p className="font-medium text-foreground">{title}</p>
+        <p className="text-sm text-muted-foreground">{description}</p>
+        <p className="text-xs text-muted-foreground/60 mt-1">{time}</p>
       </div>
     </div>
   );
