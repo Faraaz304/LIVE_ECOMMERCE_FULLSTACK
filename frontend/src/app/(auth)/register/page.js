@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../../../hooks/useAuth'; // Adjust path if necessary
+import { useAuth } from '../../../hooks/useAuth';
 
 const RegisterPage = () => {
   const router = useRouter();
@@ -13,166 +13,160 @@ const RegisterPage = () => {
     username: '',
     email: '',
     password: '',
-    role: 'USER', // Default role set to 'USER'
+    role: 'USER',
   });
 
   useEffect(() => {
-    // Clear messages when component mounts
     clearMessages();
   }, [clearMessages]);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    clearMessages(); // Clear previous messages on new submission
-
-    if (!formData.username || !formData.email || !formData.password || !formData.role) {
-      // You could set a local error here for immediate client-side validation
-      // setSubmitError('Please fill in all fields.');
-      // return;
-      // For this example, we let useAuth's error handling for backend validation take over
-    }
-
+    clearMessages();
     const result = await register(formData.username, formData.email, formData.password, formData.role);
-
     if (result) {
-      // Registration successful, handle redirection
-      setFormData({ username: '', email: '', password: '', role: 'USER' }); // Clear form
-
+      setFormData({ username: '', email: '', password: '', role: 'USER' });
       setTimeout(() => {
-        if (result.role === 'USER') {
-          router.push('/user/dashboard');
-        } else if (result.role === 'SELLER') {
-          router.push('/seller/dashboard');
-        } else {
-          router.push('/login'); // Fallback to login if role is unexpected or not provided
-        }
+        if (result.role === 'USER') router.push('/user/dashboard');
+        else if (result.role === 'SELLER') router.push('/seller/dashboard');
+        else router.push('/login');
       }, 0);
     }
-    // If result is null, it means `register` failed and `submitError` in `useAuth` is already set.
   };
 
   return (
-    <div className="bg-white p-8 rounded-xl shadow-md max-w-md w-full">
-      <div className="text-center mb-6">
-        <h1 className="text-3xl font-bold text-[#111827] mb-2">Register for ShopLive</h1>
-        <p className="text-sm text-[#6b7280]">Create your account</p>
+    <div className="mx-auto grid w-full max-w-[450px] gap-6">
+      <div className="flex flex-col space-y-2 text-center">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          Create an account
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Enter your details below to get started
+        </p>
       </div>
 
-      <form onSubmit={handleSubmit}>
-        <div className="mb-4">
-          <label className="block text-sm font-semibold text-[#374151] mb-2" htmlFor="username">
+      <form onSubmit={handleSubmit} className="grid gap-4">
+        
+        {/* Username */}
+        <div className="grid gap-2">
+          <label className="text-sm font-medium leading-none" htmlFor="username">
             Username
           </label>
           <input
-            type="text"
             id="username"
             name="username"
-            className="w-full px-4 py-2 border-2 border-[#e5e7eb] rounded-lg focus:outline-none focus:border-[#667eea] focus:shadow-[0_0_0_3px_rgba(102,126,234,0.1)]"
-            placeholder="Enter your username"
-            value={formData.username}
-            onChange={handleInputChange}
+            type="text"
+            placeholder="johndoe"
             required
             disabled={isSubmitting}
+            value={formData.username}
+            onChange={handleInputChange}
+            className="flex h-11 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
           />
         </div>
 
-        <div className="mb-4">
-          <label className="block text-sm font-semibold text-[#374151] mb-2" htmlFor="email">
+        {/* Email */}
+        <div className="grid gap-2">
+          <label className="text-sm font-medium leading-none" htmlFor="email">
             Email
           </label>
           <input
-            type="email"
             id="email"
             name="email"
-            className="w-full px-4 py-2 border-2 border-[#e5e7eb] rounded-lg focus:outline-none focus:border-[#667eea] focus:shadow-[0_0_0_3px_rgba(102,126,234,0.1)]"
-            placeholder="Enter your email"
-            value={formData.email}
-            onChange={handleInputChange}
+            type="email"
+            placeholder="m@example.com"
             required
             disabled={isSubmitting}
+            value={formData.email}
+            onChange={handleInputChange}
+            className="flex h-11 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
           />
         </div>
 
-        <div className="mb-6">
-          <label className="block text-sm font-semibold text-[#374151] mb-2" htmlFor="password">
+        {/* Password */}
+        <div className="grid gap-2">
+          <label className="text-sm font-medium leading-none" htmlFor="password">
             Password
           </label>
           <input
-            type="password"
             id="password"
             name="password"
-            className="w-full px-4 py-2 border-2 border-[#e5e7eb] rounded-lg focus:outline-none focus:border-[#667eea] focus:shadow-[0_0_0_3px_rgba(102,126,234,0.1)]"
-            placeholder="Enter your password"
-            value={formData.password}
-            onChange={handleInputChange}
+            type="password"
+            placeholder="Create a password"
             required
             disabled={isSubmitting}
+            value={formData.password}
+            onChange={handleInputChange}
+            className="flex h-11 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
           />
         </div>
 
-        {/* Role Selection Dropdown */}
-        <div className="mb-6">
-          <label className="block text-sm font-semibold text-[#374151] mb-2" htmlFor="role">
-            Register as
+        {/* Role Selection Cards */}
+        <div className="grid gap-2">
+          <label className="text-sm font-medium leading-none">
+            I want to
           </label>
-          <select
-            id="role"
-            name="role"
-            className="w-full px-4 py-2 border-2 border-[#e5e7eb] rounded-lg focus:outline-none focus:border-[#667eea] focus:shadow-[0_0_0_3px_rgba(102,126,234,0.1)]"
-            value={formData.role}
-            onChange={handleInputChange}
-            required
-            disabled={isSubmitting}
-          >
-            <option value="USER">CLIENT</option>
-            <option value="SELLER">SELLER</option>
-            {/* The 'admin' role is correctly excluded from the UI, as requested. */}
-          </select>
+          <div className="grid grid-cols-2 gap-4">
+            {/* Buyer Card */}
+            <label className={`cursor-pointer rounded-xl border-2 p-4 flex flex-col items-center justify-center gap-2 transition-all hover:bg-muted/50 ${formData.role === 'USER' ? 'border-primary bg-primary/5 text-primary' : 'border-border text-muted-foreground'}`}>
+              <input 
+                type="radio" 
+                name="role" 
+                value="USER" 
+                checked={formData.role === 'USER'} 
+                onChange={handleInputChange}
+                className="hidden"
+              />
+              <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+              <span className="font-semibold text-sm">Buy</span>
+            </label>
+            
+            {/* Seller Card */}
+            <label className={`cursor-pointer rounded-xl border-2 p-4 flex flex-col items-center justify-center gap-2 transition-all hover:bg-muted/50 ${formData.role === 'SELLER' ? 'border-primary bg-primary/5 text-primary' : 'border-border text-muted-foreground'}`}>
+              <input 
+                type="radio" 
+                name="role" 
+                value="SELLER" 
+                checked={formData.role === 'SELLER'} 
+                onChange={handleInputChange}
+                className="hidden"
+              />
+              <svg className="w-6 h-6 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+              <span className="font-semibold text-sm">Sell</span>
+            </label>
+          </div>
         </div>
 
         {submitError && (
-          <div className="bg-[#fef2f2] border border-[#fecaca] text-[#dc2626] rounded-lg p-3 mb-4 text-center">
+          <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20 text-sm text-destructive font-medium text-center">
             {submitError}
           </div>
         )}
         {successMessage && (
-          <div className="bg-[#f0fdf4] border border-[#bbf7d0] text-[#15803d] rounded-lg p-3 mb-4 text-center">
+          <div className="p-3 rounded-md bg-green-500/10 border border-green-500/20 text-sm text-green-600 dark:text-green-400 font-medium text-center">
             {successMessage}
           </div>
         )}
 
         <button
           type="submit"
-          className="w-full py-3 text-white rounded-lg text-base font-semibold cursor-pointer transition-all hover:-translate-y-px"
-          style={{
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            boxShadow: '0 0px 0px rgba(0,0,0,0)',
-            '--tw-shadow': '0 10px 30px rgba(102, 126, 234, 0.3)',
-            opacity: isSubmitting ? 0.7 : 1,
-            cursor: isSubmitting ? 'not-allowed' : 'pointer',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.boxShadow = 'var(--tw-shadow)')}
-          onMouseLeave={(e) => (e.currentTarget.style.boxShadow = 'none')}
           disabled={isSubmitting}
+          className="mt-2 inline-flex h-11 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
         >
-          {isSubmitting ? 'Registering...' : 'Register'}
+          {isSubmitting ? 'Creating Account...' : 'Create Account'}
         </button>
       </form>
 
-      <p className="text-center text-sm text-[#6b7280] mt-6">
-        Already have an account?{' '}
-        <Link href="/login" className="text-[#667eea] font-semibold hover:underline">
-          Login here
+      <div className="text-center text-sm text-muted-foreground">
+        Already have an account?{" "}
+        <Link href="/login" className="font-medium text-primary hover:underline underline-offset-4">
+          Login
         </Link>
-      </p>
+      </div>
     </div>
   );
 };
