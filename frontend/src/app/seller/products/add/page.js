@@ -6,7 +6,6 @@ import useProducts from '@/hooks/useProducts';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, Save, Loader2 } from 'lucide-react';
 
-// Import the new components
 import ProductForm from '@/components/products/ProductForm';
 import ProductPreviewSidebar from '@/components/products/ProductPreviewSidebar';
 
@@ -95,27 +94,27 @@ const AddProductPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-24">
+    <div className="min-h-screen bg-muted/30 pb-24">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-30 px-6 py-4 mb-8">
+      <div className="bg-background border-b border-border sticky top-0 z-30 px-6 py-4 mb-8">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => router.back()} className="text-slate-500 hover:text-slate-900">
+            <Button variant="ghost" size="icon" onClick={() => router.back()} className="text-muted-foreground hover:text-foreground">
               <ChevronLeft className="w-5 h-5" />
             </Button>
             <div>
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight">Add Product</h1>
-              <p className="text-xs text-slate-500">Create a new listing for your inventory</p>
+              <h1 className="text-xl font-bold text-foreground tracking-tight">Add Product</h1>
+              <p className="text-xs text-muted-foreground">Create a new listing for your inventory</p>
             </div>
           </div>
           <div className="flex gap-3">
-            <Button variant="outline" onClick={() => router.push('/seller/products')} disabled={isLoading}>
+            <Button variant="outline" onClick={() => router.push('/seller/products')} disabled={isLoading} className="border-border bg-background">
               Cancel
             </Button>
             <Button 
               onClick={handleSubmit} 
               disabled={isLoading}
-              className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
             >
               {isLoading ? (
                 <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
@@ -127,20 +126,20 @@ const AddProductPage = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* Left Column: Form Inputs */}
           <div className="lg:col-span-8 space-y-6">
             {success && (
-              <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg p-4 flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
-                <span className="bg-emerald-100 p-1 rounded-full">✓</span>
+              <div className="bg-green-500/15 border border-green-500/30 text-green-600 rounded-lg p-4 flex items-center gap-2 animate-in fade-in slide-in-from-top-2">
+                <span className="bg-green-500/20 p-1 rounded-full text-xs">✓</span>
                 Product created successfully! Redirecting...
               </div>
             )}
             
             {createError && (
-              <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 animate-in fade-in slide-in-from-top-2">
+              <div className="bg-destructive/10 border border-destructive/20 text-destructive rounded-lg p-4 animate-in fade-in slide-in-from-top-2">
                 Error: {createError}
               </div>
             )}

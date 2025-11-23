@@ -11,12 +11,13 @@ import {
   Video, 
   Eye, 
   ShoppingBag,
-  Radio
+  Radio,
+  Plus
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Pagination,
   PaginationContent,
@@ -62,21 +63,23 @@ const dummyScheduledStreams = [
 ];
 
 const StatCard = ({ title, value, trend, icon: Icon, colorClass }) => (
-  <Card className="p-5 border-slate-200 shadow-none hover:border-slate-300 transition-all duration-200 group">
-    <div className="flex justify-between items-start">
-      <div className="space-y-1">
-        <p className="text-sm font-medium text-slate-500">{title}</p>
-        <h3 className="text-2xl font-bold text-slate-900 tracking-tight">{value}</h3>
+  <Card className="border-border shadow-sm hover:border-primary/50 transition-all duration-200 group bg-card text-card-foreground">
+    <CardContent className="p-5">
+      <div className="flex justify-between items-start">
+        <div className="space-y-1">
+          <p className="text-sm font-medium text-muted-foreground">{title}</p>
+          <h3 className="text-2xl font-bold text-foreground tracking-tight">{value}</h3>
+        </div>
+        <div className={cn("p-2 rounded-lg transition-colors opacity-80", colorClass)}>
+          <Icon size={20} />
+        </div>
       </div>
-      <div className={cn("p-2 rounded-lg transition-colors", colorClass)}>
-        <Icon size={20} className="opacity-80" />
+      <div className="mt-4 flex items-center text-xs font-medium text-green-600 bg-green-500/10 w-fit px-2 py-1 rounded-full border border-green-500/20">
+        <TrendingUp size={12} className="mr-1" />
+        <span>+{trend}%</span>
+        <span className="text-muted-foreground font-normal ml-1">vs last month</span>
       </div>
-    </div>
-    <div className="mt-4 flex items-center text-xs font-medium text-emerald-600 bg-emerald-50 w-fit px-2 py-1 rounded-full">
-      <TrendingUp size={12} className="mr-1" />
-      <span>+{trend}%</span>
-      <span className="text-slate-400 font-normal ml-1">vs last month</span>
-    </div>
+    </CardContent>
   </Card>
 );
 
@@ -92,21 +95,21 @@ const LiveStreamsDashboard = () => {
   const currentPaginatedStreams = streamsToDisplay.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
   return (
-    <div className="min-h-screen bg-slate-50/50 p-6 md:p-10">
+    <div className="min-h-screen bg-muted/30 p-6 md:p-10">
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">Live Dashboard</h1>
-            <p className="text-slate-500 mt-1">Manage streams, scheduled events, and performance metrics.</p>
+            <h1 className="text-3xl font-bold text-foreground tracking-tight">Live Dashboard</h1>
+            <p className="text-muted-foreground mt-1">Manage streams, scheduled events, and performance metrics.</p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" className="bg-white border-slate-200 hover:bg-slate-50">
+            <Button variant="outline" className="bg-background border-border hover:bg-muted">
               <Calendar className="mr-2 h-4 w-4" />
               Calendar
             </Button>
-            <Button className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20">
+            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-md">
               <Video className="mr-2 h-4 w-4" />
               New Stream
             </Button>
@@ -114,43 +117,45 @@ const LiveStreamsDashboard = () => {
         </div>
 
         {/* Hero / Action Section */}
-        <div className="relative overflow-hidden rounded-2xl bg-slate-900 text-white shadow-2xl shadow-slate-900/20">
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-blue-600/30 blur-3xl rounded-full pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-purple-600/30 blur-3xl rounded-full pointer-events-none"></div>
+        {/* We keep specific colors here as it's a feature banner, but ensure text is readable */}
+        <div className="relative overflow-hidden rounded-2xl bg-foreground text-background shadow-xl">
+          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-primary/30 blur-3xl rounded-full pointer-events-none"></div>
+          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-blue-500/30 blur-3xl rounded-full pointer-events-none"></div>
           
           <div className="relative z-10 p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8">
             <div className="space-y-4 max-w-2xl text-center md:text-left">
-              <div className="inline-flex items-center rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs font-medium text-blue-200 backdrop-blur-sm">
-                <Radio className="mr-1.5 h-3 w-3 text-blue-400 animate-pulse" />
+              <div className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary-foreground/90 backdrop-blur-sm">
+                <Radio className="mr-1.5 h-3 w-3 text-red-500 animate-pulse" />
                 Ready to broadcast
               </div>
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
+              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-background">
                 Engage your audience in real-time
               </h2>
-              <p className="text-slate-300 text-lg leading-relaxed">
+              <p className="text-background/70 text-lg leading-relaxed">
                 Start streaming now to showcase products, answer questions, and drive conversions directly from your video feed.
               </p>
               <div className="pt-2 flex flex-wrap gap-4 justify-center md:justify-start">
-                <Button size="lg" className="bg-blue-600 hover:bg-blue-500 text-white border-0 font-semibold">
+                <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 border-0 font-semibold">
                   <Radio className="mr-2 h-4 w-4" />
                   Go Live Now
                 </Button>
-                <Button size="lg" variant="outline" className="border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white backdrop-blur-sm">
-                  Schedule for Later
+                <Button size="lg" variant="outline" className="border-background/20 bg-background/5 text-background hover:bg-background/10 hover:text-background backdrop-blur-sm">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Schedule Later
                 </Button>
               </div>
             </div>
-            {/* Decorative Abstract UI Element */}
-            <div className="hidden md:block relative w-64 h-48 bg-slate-800/50 rounded-xl border border-white/10 backdrop-blur-md p-4 transform rotate-3 hover:rotate-0 transition-transform duration-500">
+            {/* Decorative Element */}
+            <div className="hidden md:block relative w-64 h-48 bg-background/10 rounded-xl border border-background/10 backdrop-blur-md p-4 transform rotate-3 hover:rotate-0 transition-transform duration-500">
               <div className="flex items-center gap-3 mb-4">
-                 <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center"><Video size={14} /></div>
-                 <div className="h-2 w-24 bg-slate-600 rounded"></div>
+                 <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white"><Video size={14} /></div>
+                 <div className="h-2 w-24 bg-background/20 rounded"></div>
               </div>
               <div className="space-y-2">
-                 <div className="h-24 w-full bg-slate-700/50 rounded-lg animate-pulse"></div>
+                 <div className="h-24 w-full bg-background/10 rounded-lg animate-pulse"></div>
                  <div className="flex gap-2">
-                   <div className="h-2 w-1/3 bg-slate-600 rounded"></div>
-                   <div className="h-2 w-1/4 bg-slate-600 rounded"></div>
+                   <div className="h-2 w-1/3 bg-background/20 rounded"></div>
+                   <div className="h-2 w-1/4 bg-background/20 rounded"></div>
                  </div>
               </div>
             </div>
@@ -164,28 +169,28 @@ const LiveStreamsDashboard = () => {
             value={dummyStats.totalStreams} 
             trend={dummyStats.streamTrend} 
             icon={Video}
-            colorClass="bg-blue-50 text-blue-600"
+            colorClass="bg-blue-500/10 text-blue-600"
           />
           <StatCard 
             title="Watch Hours" 
             value={`${dummyStats.totalWatchHours}h`} 
             trend={dummyStats.watchHoursTrend} 
             icon={Clock}
-            colorClass="bg-purple-50 text-purple-600"
+            colorClass="bg-purple-500/10 text-purple-600"
           />
           <StatCard 
             title="Avg Viewers" 
             value={dummyStats.averageViewers} 
             trend={dummyStats.viewersTrend} 
             icon={Users}
-            colorClass="bg-orange-50 text-orange-600"
+            colorClass="bg-orange-500/10 text-orange-600"
           />
           <StatCard 
             title="Reservations" 
             value={dummyStats.reservationsGenerated} 
             trend={dummyStats.reservationsTrend} 
             icon={ShoppingBag}
-            colorClass="bg-emerald-50 text-emerald-600"
+            colorClass="bg-emerald-500/10 text-emerald-600"
           />
         </div>
 
@@ -193,14 +198,14 @@ const LiveStreamsDashboard = () => {
         <div className="space-y-6">
           {/* Custom Tabs */}
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="bg-white p-1 rounded-lg border border-slate-200 inline-flex">
+            <div className="bg-card p-1 rounded-lg border border-border inline-flex">
               <button
                 onClick={() => { setActiveTab('past'); setCurrentPage(1); }}
                 className={cn(
                   "px-4 py-2 text-sm font-medium rounded-md transition-all",
                   activeTab === 'past' 
-                    ? "bg-slate-900 text-white shadow-sm" 
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                    ? "bg-primary text-primary-foreground shadow-sm" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
               >
                 Past Streams
@@ -210,56 +215,55 @@ const LiveStreamsDashboard = () => {
                 className={cn(
                   "px-4 py-2 text-sm font-medium rounded-md transition-all",
                   activeTab === 'scheduled' 
-                    ? "bg-slate-900 text-white shadow-sm" 
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+                    ? "bg-primary text-primary-foreground shadow-sm" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 )}
               >
                 Scheduled
               </button>
             </div>
             
-            {/* Search or Filter could go here */}
             <div className="relative w-full sm:w-auto">
                <input 
                  placeholder="Search streams..." 
-                 className="w-full sm:w-64 text-sm px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900/10 bg-white"
+                 className="w-full sm:w-64 text-sm px-4 py-2.5 border border-input bg-background rounded-lg focus:outline-none focus:ring-2 focus:ring-ring text-foreground placeholder:text-muted-foreground"
                />
             </div>
           </div>
 
           {/* Table */}
-          <Card className="border border-slate-200 shadow-sm overflow-hidden bg-white">
+          <Card className="border border-border shadow-sm overflow-hidden bg-card text-card-foreground">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-100 bg-slate-50/50">
-                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Stream Details</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status & Time</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Performance</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Actions</th>
+                  <tr className="border-b border-border bg-muted/40">
+                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Stream Details</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status & Time</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Performance</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-border">
                   {currentPaginatedStreams.length === 0 ? (
                     <tr>
                       <td colSpan={4} className="px-6 py-12 text-center">
-                        <div className="mx-auto w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mb-3">
-                          <Video className="text-slate-400" />
+                        <div className="mx-auto w-12 h-12 bg-muted rounded-full flex items-center justify-center mb-3">
+                          <Video className="text-muted-foreground" />
                         </div>
-                        <h3 className="text-slate-900 font-medium">No streams found</h3>
-                        <p className="text-slate-500 text-sm mt-1">Get started by scheduling a new stream.</p>
+                        <h3 className="text-foreground font-medium">No streams found</h3>
+                        <p className="text-muted-foreground text-sm mt-1">Get started by scheduling a new stream.</p>
                       </td>
                     </tr>
                   ) : (
                     currentPaginatedStreams.map((stream) => (
-                      <tr key={stream.id} className="group hover:bg-slate-50/80 transition-colors">
+                      <tr key={stream.id} className="group hover:bg-muted/30 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-start gap-4">
-                            <div className="relative h-16 w-28 flex-shrink-0 overflow-hidden rounded-lg border border-slate-100 shadow-sm group-hover:shadow-md transition-all">
+                            <div className="relative h-16 w-28 flex-shrink-0 overflow-hidden rounded-lg border border-border shadow-sm group-hover:shadow-md transition-all bg-muted">
                               <img src={stream.thumbnail} alt={stream.title} className="h-full w-full object-cover" />
                               {stream.status === 'live' ? (
                                 <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                                  <Badge className="bg-red-500 hover:bg-red-600 border-0 text-[10px] px-2 py-0.5">LIVE</Badge>
+                                  <Badge className="bg-red-500 hover:bg-red-600 border-0 text-[10px] px-2 py-0.5 text-white">LIVE</Badge>
                                 </div>
                               ) : (
                                 <div className="absolute bottom-1 right-1 bg-black/70 text-white text-[9px] font-medium px-1 rounded">
@@ -268,9 +272,9 @@ const LiveStreamsDashboard = () => {
                               )}
                             </div>
                             <div>
-                              <h4 className="font-semibold text-slate-900 line-clamp-1">{stream.title}</h4>
-                              <div className="flex items-center gap-2 mt-1 text-xs text-slate-500">
-                                <Badge variant="secondary" className="text-[10px] px-1.5 h-5 bg-slate-100 text-slate-600 font-normal border-slate-200">
+                              <h4 className="font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors">{stream.title}</h4>
+                              <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
+                                <Badge variant="outline" className="text-[10px] px-1.5 h-5 font-normal border-border bg-background text-muted-foreground">
                                   {stream.meta}
                                 </Badge>
                                 <span>• {stream.id}</span>
@@ -280,8 +284,8 @@ const LiveStreamsDashboard = () => {
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex flex-col">
-                            <span className="text-sm font-medium text-slate-900">{stream.date}</span>
-                            <span className="text-xs text-slate-500 flex items-center mt-0.5">
+                            <span className="text-sm font-medium text-foreground">{stream.date}</span>
+                            <span className="text-xs text-muted-foreground flex items-center mt-0.5">
                               <Clock size={12} className="mr-1" />
                               {stream.status === 'scheduled' ? stream.time : `${stream.durationMinutes} mins`}
                             </span>
@@ -289,16 +293,16 @@ const LiveStreamsDashboard = () => {
                         </td>
                         <td className="px-6 py-4">
                           {stream.status === 'scheduled' ? (
-                            <span className="text-xs text-slate-400 italic">--</span>
+                            <span className="text-xs text-muted-foreground italic">--</span>
                           ) : (
                             <div className="flex items-center gap-4">
                               <div className="flex items-center gap-1.5" title="Views">
-                                <Eye size={14} className="text-slate-400" />
-                                <span className="text-sm font-medium text-slate-700">{stream.totalViews}</span>
+                                <Eye size={14} className="text-muted-foreground" />
+                                <span className="text-sm font-medium text-foreground">{stream.totalViews}</span>
                               </div>
                               <div className="flex items-center gap-1.5" title="Products Pinned">
-                                <ShoppingBag size={14} className="text-slate-400" />
-                                <span className="text-sm font-medium text-slate-700">{stream.productsPinned}</span>
+                                <ShoppingBag size={14} className="text-muted-foreground" />
+                                <span className="text-sm font-medium text-foreground">{stream.productsPinned}</span>
                               </div>
                             </div>
                           )}
@@ -306,16 +310,16 @@ const LiveStreamsDashboard = () => {
                         <td className="px-6 py-4 text-right">
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-slate-900">
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                                 <MoreHorizontal size={16} />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-40">
+                            <DropdownMenuContent align="end" className="w-40 bg-card border-border">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem className="text-xs">View Analytics</DropdownMenuItem>
-                              <DropdownMenuItem className="text-xs">Edit Details</DropdownMenuItem>
-                              <div className="h-px bg-slate-100 my-1" />
-                              <DropdownMenuItem className="text-xs text-red-600">Delete Stream</DropdownMenuItem>
+                              <DropdownMenuItem className="text-xs cursor-pointer">View Analytics</DropdownMenuItem>
+                              <DropdownMenuItem className="text-xs cursor-pointer">Edit Details</DropdownMenuItem>
+                              <div className="h-px bg-border my-1" />
+                              <DropdownMenuItem className="text-xs text-destructive focus:text-destructive cursor-pointer">Delete Stream</DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </td>
@@ -328,26 +332,25 @@ const LiveStreamsDashboard = () => {
 
             {/* Footer / Pagination */}
             {totalStreams > 0 && (
-              <div className="border-t border-slate-100 bg-slate-50/30 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-                <p className="text-xs text-slate-500">
-                  Showing <span className="font-medium text-slate-900">{(currentPage - 1) * rowsPerPage + 1}</span> to <span className="font-medium text-slate-900">{Math.min(currentPage * rowsPerPage, totalStreams)}</span> of <span className="font-medium text-slate-900">{totalStreams}</span> streams
+              <div className="border-t border-border bg-muted/20 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <p className="text-xs text-muted-foreground">
+                  Showing <span className="font-medium text-foreground">{(currentPage - 1) * rowsPerPage + 1}</span> to <span className="font-medium text-foreground">{Math.min(currentPage * rowsPerPage, totalStreams)}</span> of <span className="font-medium text-foreground">{totalStreams}</span> streams
                 </p>
                 <Pagination className="w-auto mx-0">
                   <PaginationContent>
                     <PaginationItem>
                       <PaginationPrevious 
                         onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
-                        className={cn("cursor-pointer", currentPage === 1 && "opacity-50 pointer-events-none")}
+                        className={cn("cursor-pointer bg-background hover:bg-muted", currentPage === 1 && "opacity-50 pointer-events-none")}
                       />
                     </PaginationItem>
-                    {/* Simplified pagination logic for demo */}
                     <PaginationItem>
-                      <PaginationLink isActive>{currentPage}</PaginationLink>
+                      <PaginationLink isActive className="bg-primary text-primary-foreground border-primary">{currentPage}</PaginationLink>
                     </PaginationItem>
                     <PaginationItem>
                       <PaginationNext 
                         onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                        className={cn("cursor-pointer", currentPage === totalPages && "opacity-50 pointer-events-none")}
+                        className={cn("cursor-pointer bg-background hover:bg-muted", currentPage === totalPages && "opacity-50 pointer-events-none")}
                       />
                     </PaginationItem>
                   </PaginationContent>
