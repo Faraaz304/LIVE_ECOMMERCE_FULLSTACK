@@ -1,6 +1,5 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
@@ -22,27 +21,28 @@ const ProductFilterBar = ({
   onBulkAction,
 }) => {
   return (
-    <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+    <div className="bg-card text-card-foreground p-4 rounded-xl border border-border shadow-sm">
+      <div className="flex flex-col xl:flex-row gap-4 justify-between">
         
-        {/* Left Side: Search & Filters */}
-        <div className="flex flex-1 w-full gap-3 flex-wrap md:flex-nowrap">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+        {/* Left: Search & Filter Group */}
+        <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
+          {/* Search */}
+          <div className="relative flex-1 min-w-[200px] sm:max-w-[300px]">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
               type="text"
               placeholder="Search products..."
-              className="pl-9 bg-slate-50 border-slate-200 focus:bg-white transition-colors"
+              className="pl-9 bg-background border-input focus-visible:ring-primary"
               onChange={(e) => onSearchChange(e.target.value)}
             />
           </div>
 
-          <div className="flex gap-2 overflow-x-auto pb-1 md:pb-0">
-             {/* Status Filter */}
+          <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0 hide-scrollbar">
+             {/* Status */}
             <Select onValueChange={onStatusFilterChange}>
-              <SelectTrigger className="w-[140px] border-slate-200 text-slate-600">
+              <SelectTrigger className="w-[130px] bg-background border-input text-foreground">
                 <div className="flex items-center gap-2 truncate">
-                  <Filter className="w-3.5 h-3.5 opacity-70" />
+                  <Filter className="w-3.5 h-3.5 text-muted-foreground" />
                   <SelectValue placeholder="Status" />
                 </div>
               </SelectTrigger>
@@ -54,11 +54,11 @@ const ProductFilterBar = ({
               </SelectContent>
             </Select>
 
-            {/* Category Filter */}
+            {/* Category */}
             <Select onValueChange={onCategoryFilterChange}>
-              <SelectTrigger className="w-[150px] border-slate-200 text-slate-600">
+              <SelectTrigger className="w-[140px] bg-background border-input text-foreground">
                  <div className="flex items-center gap-2 truncate">
-                  <Filter className="w-3.5 h-3.5 opacity-70" />
+                  <Filter className="w-3.5 h-3.5 text-muted-foreground" />
                   <SelectValue placeholder="Category" />
                 </div>
               </SelectTrigger>
@@ -67,7 +67,7 @@ const ProductFilterBar = ({
                 <SelectItem value="Electronics">Electronics</SelectItem>
                 <SelectItem value="Jewelry">Jewelry</SelectItem>
                 <SelectItem value="Kitchen">Kitchen</SelectItem>
-                <SelectItem value="Bridal Collections">Bridal Collections</SelectItem>
+                <SelectItem value="Bridal Collections">Bridal</SelectItem>
                 <SelectItem value="Cosmetics">Cosmetics</SelectItem>
                 <SelectItem value="Stationary">Stationary</SelectItem>
               </SelectContent>
@@ -75,10 +75,10 @@ const ProductFilterBar = ({
             
              {/* Sort */}
             <Select onValueChange={onSortChange}>
-              <SelectTrigger className="w-[140px] border-slate-200 text-slate-600">
+              <SelectTrigger className="w-[140px] bg-background border-input text-foreground">
                  <div className="flex items-center gap-2 truncate">
-                  <ArrowUpDown className="w-3.5 h-3.5 opacity-70" />
-                  <SelectValue placeholder="Sort By" />
+                  <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground" />
+                  <SelectValue placeholder="Sort" />
                 </div>
               </SelectTrigger>
               <SelectContent>
@@ -92,25 +92,27 @@ const ProductFilterBar = ({
           </div>
         </div>
 
-        {/* Right Side: Bulk Actions & View Toggle */}
-        <div className="flex items-center gap-3 w-full md:w-auto justify-between md:justify-end border-t md:border-t-0 pt-3 md:pt-0 border-slate-100">
+        {/* Right: Actions & View */}
+        <div className="flex items-center gap-3 w-full xl:w-auto justify-between xl:justify-end pt-2 xl:pt-0 border-t xl:border-t-0 border-border">
           {showBulkActions && (
             <Select onValueChange={onBulkAction}>
-              <SelectTrigger className="w-[160px] bg-indigo-50 border-indigo-200 text-indigo-700 font-medium h-9">
+              <SelectTrigger className="w-[150px] bg-destructive/10 border-destructive/20 text-destructive font-medium h-9 focus:ring-destructive">
                 <SelectValue placeholder="Bulk Actions" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Delete Selected" className="text-red-600 focus:text-red-600 focus:bg-red-50">Delete Selected</SelectItem>
+                <SelectItem value="Delete Selected" className="text-destructive focus:bg-destructive/10">Delete Selected</SelectItem>
               </SelectContent>
             </Select>
           )}
 
-          <div className="flex bg-slate-100 p-1 rounded-lg border border-slate-200">
+          <div className="flex bg-muted p-1 rounded-lg border border-border">
             <button
               onClick={() => onViewChange('grid')}
               className={cn(
-                "p-1.5 rounded-md transition-all",
-                currentView === 'grid' ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                "p-2 rounded-md transition-all",
+                currentView === 'grid' 
+                  ? "bg-background text-foreground shadow-sm" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-background/50"
               )}
             >
               <LayoutGrid className="w-4 h-4" />
@@ -118,8 +120,10 @@ const ProductFilterBar = ({
             <button
               onClick={() => onViewChange('list')}
               className={cn(
-                "p-1.5 rounded-md transition-all",
-                currentView === 'list' ? "bg-white text-slate-900 shadow-sm" : "text-slate-500 hover:text-slate-700"
+                "p-2 rounded-md transition-all",
+                currentView === 'list' 
+                  ? "bg-background text-foreground shadow-sm" 
+                  : "text-muted-foreground hover:text-foreground hover:bg-background/50"
               )}
             >
               <List className="w-4 h-4" />

@@ -2,11 +2,10 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import useProducts from '@/hooks/useProducts';
+import useProducts from '@/hooks/useProducts'; // Ensure this hook exists
 import { Button } from '@/components/ui/button';
-import { Plus, Package } from 'lucide-react'; // Icons
+import { Plus, PackageOpen } from 'lucide-react';
 
-// Import the new components
 import ProductFilterBar from '@/components/products/ProductFilterBar';
 import ProductGridView from '@/components/products/ProductGridView';
 import ProductListView from '@/components/products/ProductListView';
@@ -26,11 +25,9 @@ const ProductsPage = () => {
     getAllProducts();
   }, [getAllProducts]);
 
-  // Memoized filter and sort logic
   const filteredAndSortedProducts = useCallback(() => {
     let currentProducts = products || [];
 
-    // Filter by search term
     if (searchTerm) {
       const lowerCaseSearchTerm = searchTerm.toLowerCase();
       currentProducts = currentProducts.filter(product =>
@@ -39,7 +36,6 @@ const ProductsPage = () => {
       );
     }
 
-    // Filter by status
     if (filterStatus !== 'all') {
       currentProducts = currentProducts.filter(product => {
         if (filterStatus === 'active') return product.live;
@@ -49,12 +45,10 @@ const ProductsPage = () => {
       });
     }
 
-    // Filter by category
     if (filterCategory !== 'all') {
       currentProducts = currentProducts.filter(product => product.category === filterCategory);
     }
 
-    // Sort products
     currentProducts.sort((a, b) => {
       const dateA = a.createdAt ? new Date(a.createdAt) : 0;
       const dateB = b.createdAt ? new Date(b.createdAt) : 0;
@@ -114,38 +108,36 @@ const ProductsPage = () => {
     }
   };
 
-  const handleAddProductClick = () => {
-    router.push('/seller/products/add');
-  };
-
   if (isLoading) {
-    return <div className="h-screen flex items-center justify-center bg-slate-50 text-slate-500">Loading products...</div>;
+    return <div className="h-screen flex items-center justify-center bg-muted/30 text-muted-foreground animate-pulse">Loading inventory...</div>;
   }
 
   if (error) {
-    return <div className="h-screen flex items-center justify-center bg-slate-50 text-red-500">Error: {error}</div>;
+    return <div className="h-screen flex items-center justify-center bg-muted/30 text-destructive">Error: {error}</div>;
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50 p-8">
+    <div className="min-h-screen bg-muted/30 p-4 sm:p-8">
       <div className="max-w-7xl mx-auto space-y-6">
         
-        {/* Page Header */}
+        {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Inventory</h1>
-            <p className="text-slate-500 text-sm mt-1">Manage your product catalog, prices, and stock levels.</p>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Inventory</h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              Manage your catalog, track stock, and organize products.
+            </p>
           </div>
           <Button
             size="lg"
-            onClick={handleAddProductClick}
-            className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20"
+            onClick={() => router.push('/seller/products/add')}
+            className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-md transition-all"
           >
             <Plus className="w-4 h-4 mr-2" /> Add Product
           </Button>
         </div>
 
-        {/* Filter Bar */}
+        {/* Filters */}
         <ProductFilterBar
           onSearchChange={setSearchTerm}
           onStatusFilterChange={setFilterStatus}
@@ -157,35 +149,37 @@ const ProductsPage = () => {
           onBulkAction={handleBulkAction}
         />
 
-        {/* Content Area */}
+        {/* Content */}
         {displayedProducts.length === 0 ? (
-          <div className="bg-white rounded-xl border border-dashed border-slate-300 p-20 text-center">
-            <div className="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Package className="w-8 h-8 text-slate-400" />
+          <div className="bg-card text-card-foreground rounded-xl border border-dashed border-border p-20 text-center shadow-sm">
+            <div className="bg-muted w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <PackageOpen className="w-10 h-10 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-1">
+            <h3 className="text-xl font-semibold text-foreground mb-2">
               {searchTerm || filterStatus !== 'all' ? 'No matching products' : 'No products found'}
             </h3>
-            <p className="text-slate-500 mb-6 text-sm max-w-md mx-auto">
+            <p className="text-muted-foreground mb-8 text-sm max-w-md mx-auto">
                {searchTerm || filterStatus !== 'all' ? 'Try adjusting your filters or search query.' : 'Get started by adding your first product to the inventory.'}
             </p>
-            <Button variant="outline" onClick={handleAddProductClick}>
+            <Button variant="outline" onClick={() => router.push('/seller/products/add')}>
               Add New Product
             </Button>
           </div>
         ) : (
-          currentView === 'grid' ? (
-            <ProductGridView products={displayedProducts} onAddProductClick={handleAddProductClick} />
-          ) : (
-            <ProductListView
-              products={displayedProducts}
-              selectedProductIds={selectedProductIds}
-              onCheckboxChange={handleCheckboxChange}
-              onMasterCheckboxChange={handleMasterCheckboxChange}
-              isAllSelected={isAllSelected}
-              onDeleteProduct={handleDeleteProduct}
-            />
-          )
+          <div className="animate-in fade-in duration-500">
+            {currentView === 'grid' ? (
+              <ProductGridView products={displayedProducts} />
+            ) : (
+              <ProductListView
+                products={displayedProducts}
+                selectedProductIds={selectedProductIds}
+                onCheckboxChange={handleCheckboxChange}
+                onMasterCheckboxChange={handleMasterCheckboxChange}
+                isAllSelected={isAllSelected}
+                onDeleteProduct={handleDeleteProduct}
+              />
+            )}
+          </div>
         )}
       </div>
     </div>
