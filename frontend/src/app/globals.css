@@ -2,7 +2,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* 
+
 :root {
   --background: #0a0a0f;
   --foreground: #e0e0ff;
@@ -179,9 +179,8 @@
   --shadow-xl: var(--shadow-xl);
   --shadow-2xl: var(--shadow-2xl);
 }
-  */
   
-
+/* 
 :root {
   --background: #eff0bc;
   --foreground: #3f402c;
@@ -348,7 +347,7 @@
   --tracking-wide: calc(var(--tracking-normal) + 0.025em);
   --tracking-wider: calc(var(--tracking-normal) + 0.05em);
   --tracking-widest: calc(var(--tracking-normal) + 0.1em);
-} 
+}  */
 
 body {
   letter-spacing: var(--tracking-normal);

@@ -18,7 +18,6 @@ import {
 import { CalendarClock, MoreHorizontal, Mail, Image as ImageIcon } from 'lucide-react';
 
 const ReservationTable = ({
-  displayedReservations,
   currentPaginatedReservations,
   selectedReservationIds,
   handleCheckboxChange,
