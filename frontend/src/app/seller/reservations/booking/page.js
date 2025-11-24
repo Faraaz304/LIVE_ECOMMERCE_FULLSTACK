@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'; // Import Shadcn Alert
 import { useReservation } from '@/hooks/useReservation';
 import useProducts from '@/hooks/useProducts';
 import { ChevronLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
@@ -18,6 +19,9 @@ const CreateManualBookingPage = () => {
 
   const { products, isLoading: isLoadingProducts, getAllProducts, error: productsError } = useProducts();
   const { createReservation, isLoading: isSubmitting, error: reservationError } = useReservation();
+
+  // State for form validation errors
+  const [validationError, setValidationError] = useState(null);
 
   const [customerDetails, setCustomerDetails] = useState({
     fullName: '',
@@ -86,6 +90,8 @@ const CreateManualBookingPage = () => {
   const handleCustomerChange = (e) => {
     const { name, value } = e.target;
     setCustomerDetails(prev => ({ ...prev, [name]: value }));
+    // Clear error when user types to improve UX
+    if (validationError) setValidationError(null);
   };
 
   const selectedProductsForSummary = products.filter(p => productSelection.selectedProductIds.has(p.id));
@@ -94,17 +100,18 @@ const CreateManualBookingPage = () => {
   // --- SUBMIT HANDLER ---
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setValidationError(null); // Clear previous errors
 
     const phone = customerDetails.phoneNumber;
     const phoneRegex = /^[0-9]{10}$/;
 
     if (!phoneRegex.test(phone)) {
-      alert("Phone number must be 10 digits and numbers only.");
+      setValidationError("Phone number must be 10 digits and numbers only.");
       return;
     }
     
     if (!customerDetails.fullName || !customerDetails.phoneNumber || !reservationDetails.selectedDate || !reservationDetails.selectedTimeSlot) {
-      alert('Please fill in all required fields: Full Name, Phone Number, Date, and Time.');
+      setValidationError("Please fill in all required fields: Full Name, Phone Number, Date, and Time.");
       return;
     }
 
@@ -122,9 +129,10 @@ const CreateManualBookingPage = () => {
     const result = await createReservation(reservationPayload);
 
     if (result.success) {
-      router.push('/seller/reservations/booking');
+      // Redirect to products page as requested
+      router.push('/seller/products');
     } else {
-      alert(`Failed to create reservation: ${result.error}`);
+      setValidationError(`Failed to create reservation: ${result.error}`);
     }
   };
 
@@ -204,6 +212,17 @@ const CreateManualBookingPage = () => {
                   isSubmitting={isSubmitting}
                   submitError={reservationError}
                 />
+
+                {/* Render Validation Alert if error exists */}
+                {validationError && (
+                  <Alert variant="destructive">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>
+                      {validationError}
+                    </AlertDescription>
+                  </Alert>
+                )}
                 
                 <Button 
                   type="submit"
