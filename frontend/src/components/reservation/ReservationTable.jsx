@@ -1,5 +1,3 @@
-// --- START OF FILE ReservationTable.jsx ---
-
 import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
@@ -16,9 +14,8 @@ import {
   PaginationItem,
   PaginationPrevious,
   PaginationNext,
-  PaginationLink,
 } from '@/components/ui/pagination';
-import { CalendarClock, MoreHorizontal, Mail } from 'lucide-react';
+import { CalendarClock, MoreHorizontal, Mail, Image as ImageIcon } from 'lucide-react';
 
 const ReservationTable = ({
   displayedReservations,
@@ -35,18 +32,13 @@ const ReservationTable = ({
   totalPages,
   formatDateTime,
   getCustomerInitials,
-  products, // Receive full product list
+  products,
 }) => {
 
-  // Helper to resolve product IDs string (e.g., "101,102" or "Item IDs: 101,102") to Product Objects
   const getReservationProducts = (productIdsString) => {
     if (!productIdsString) return [];
-    
-    // Extract numbers from string (handles "Item IDs: 101, 102" or just "101,102")
     const ids = productIdsString.match(/\d+/g); 
     if (!ids) return [];
-
-    // Map IDs to actual product objects from the 'products' prop
     return ids.map(id => products.find(p => p.id === id)).filter(Boolean);
   };
 
@@ -54,17 +46,17 @@ const ReservationTable = ({
   const indexOfLastReservation = currentPage * rowsPerPage;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div className="bg-card text-card-foreground rounded-xl shadow-sm border border-border overflow-hidden">
       
       {/* Bulk Action Header */}
       {selectedReservationIds.size > 0 && (
-         <div className="bg-primary-50 px-6 py-3 flex items-center justify-between border-b border-primary-100">
-            <span className="text-sm font-medium text-primary-700">
+         <div className="bg-primary/10 px-6 py-3 flex items-center justify-between border-b border-primary/20 animate-in fade-in slide-in-from-top-1">
+            <span className="text-sm font-medium text-primary">
               {selectedReservationIds.size} selected
             </span>
             <div className="flex gap-2">
-               <Button size="sm" variant="outline" className="bg-white border-primary-200 text-primary-700 hover:bg-primary-50">
-                 <Mail className="w-4 h-4 mr-2"/> Send Reminder
+               <Button size="sm" variant="outline" className="bg-background border-input text-foreground hover:bg-muted">
+                 <Mail className="w-3.5 h-3.5 mr-2 text-muted-foreground"/> Send Reminder
                </Button>
             </div>
          </div>
@@ -73,53 +65,56 @@ const ReservationTable = ({
       {/* Table */}
       <div className="overflow-x-auto">
         {currentPaginatedReservations.length === 0 ? (
-          <div className="p-12 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-50 mb-4">
-               <CalendarClock className="w-8 h-8 text-gray-300" />
+          <div className="p-16 text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+               <CalendarClock className="w-8 h-8 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-medium text-gray-900">No Reservations Found</h3>
-            <p className="text-gray-500 mt-1">Try adjusting your filters.</p>
+            <h3 className="text-lg font-medium text-foreground">No Reservations Found</h3>
+            <p className="text-muted-foreground mt-1 text-sm">Try adjusting your filters or search terms.</p>
           </div>
         ) : (
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/50 border-b border-gray-200 text-xs uppercase tracking-wider text-gray-500 font-medium">
+              <tr className="bg-muted/50 border-b border-border">
                 <th className="py-4 px-6 w-[50px]">
-                  <Checkbox checked={isAllSelected} onCheckedChange={handleMasterCheckboxChange} />
+                  <Checkbox 
+                    checked={isAllSelected} 
+                    onCheckedChange={handleMasterCheckboxChange} 
+                    className="border-muted-foreground/30 data-[state=checked]:border-primary"
+                  />
                 </th>
-                <th className="py-4 px-6">Customer</th>
-                <th className="py-4 px-6">Selected Products</th>
-                <th className="py-4 px-6">Date & Time</th>
-                <th className="py-4 px-6 text-right">Actions</th>
+                <th className="py-3 px-6 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Customer</th>
+                <th className="py-3 px-6 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Products</th>
+                <th className="py-3 px-6 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date & Time</th>
+                <th className="py-3 px-6 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-border">
               {currentPaginatedReservations.map((res) => {
-                const reservedProducts = getReservationProducts(res.productName || ""); // using productName field as it holds the IDs currently
+                const reservedProducts = getReservationProducts(res.productName || "");
 
                 return (
-                  <tr key={res.id} className="hover:bg-gray-50/80 transition-colors group">
+                  <tr key={res.id} className="group hover:bg-muted/30 transition-colors">
                     {/* Checkbox */}
                     <td className="py-4 px-6">
                       <Checkbox
                         checked={selectedReservationIds.has(res.id)}
                         onCheckedChange={(checked) => handleCheckboxChange(res.id, checked)}
+                        className="border-muted-foreground/30 data-[state=checked]:border-primary"
                       />
                     </td>
 
                     {/* Customer */}
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
-                        <div className="relative">
-                           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                        <div className="relative flex-shrink-0">
+                           <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm border border-primary/20">
                              {getCustomerInitials(res.customerName)}
                            </div>
-                           {/* Status Dot (Mock logic: Assuming active if future) */}
-                           <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></div>
                         </div>
                         <div>
-                          <div className="font-semibold text-gray-900 text-sm">{res.customerName}</div>
-                          <div className="text-xs text-gray-500">{res.customerPhone}</div>
+                          <div className="font-semibold text-foreground text-sm line-clamp-1">{res.customerName}</div>
+                          <div className="text-xs text-muted-foreground">{res.customerPhone}</div>
                         </div>
                       </div>
                     </td>
@@ -127,32 +122,34 @@ const ReservationTable = ({
                     {/* Products (Images) */}
                     <td className="py-4 px-6">
                       {reservedProducts.length > 0 ? (
-                        <div className="flex items-center -space-x-3 overflow-hidden hover:space-x-1 transition-all duration-300 py-1">
-                          {reservedProducts.map((prod, idx) => (
-                            <div key={`${res.id}-prod-${prod.id}`} className="relative group/img">
+                        <div className="flex items-center -space-x-3 overflow-hidden py-1 pl-1">
+                          {reservedProducts.map((prod) => (
+                            <div key={`${res.id}-prod-${prod.id}`} className="relative group/img z-0 hover:z-10 transition-all duration-200">
                                 <img 
                                   src={prod.imageUrl || "https://placehold.co/40x40?text=Img"} 
                                   alt={prod.name}
-                                  className="w-10 h-10 rounded-full border-2 border-white object-cover shadow-sm bg-gray-100"
+                                  className="w-10 h-10 rounded-full border-2 border-background object-cover shadow-sm bg-muted"
                                   title={prod.name}
                                 />
                             </div>
                           ))}
                            {reservedProducts.length > 4 && (
-                             <div className="w-8 h-8 rounded-full bg-gray-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-gray-600 z-10">
+                             <div className="w-8 h-8 rounded-full bg-muted border-2 border-background flex items-center justify-center text-[10px] font-bold text-muted-foreground z-10">
                                +{reservedProducts.length - 4}
                              </div>
                            )}
                         </div>
                       ) : (
-                        <span className="text-xs text-gray-400 italic">No products selected</span>
+                        <span className="text-xs text-muted-foreground italic flex items-center gap-1">
+                          <ImageIcon className="w-3 h-3" /> No items
+                        </span>
                       )}
                     </td>
 
-                    {/* Date & Time (Start Only) */}
+                    {/* Date & Time */}
                     <td className="py-4 px-6">
-                      <div className="flex items-center gap-2 text-gray-700">
-                        <span className="bg-gray-100 p-1.5 rounded text-gray-500">
+                      <div className="flex items-center gap-2 text-foreground">
+                        <span className="bg-muted p-1.5 rounded text-muted-foreground">
                            <CalendarClock className="w-4 h-4"/>
                         </span>
                         <span className="text-sm font-medium">
@@ -163,7 +160,7 @@ const ReservationTable = ({
 
                     {/* Actions */}
                     <td className="py-4 px-6 text-right">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-gray-900">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
                            <MoreHorizontal className="w-4 h-4" />
                         </Button>
                     </td>
@@ -176,16 +173,16 @@ const ReservationTable = ({
       </div>
 
       {/* Pagination Footer */}
-      <div className="flex items-center justify-between p-4 border-t border-gray-200 bg-gray-50/30 text-sm text-gray-600">
+      <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-t border-border bg-muted/20 gap-4 text-sm text-muted-foreground">
         <div>
-          Showing <strong>{totalReservations > 0 ? indexOfFirstReservation + 1 : 0}-{Math.min(indexOfLastReservation, totalReservations)}</strong> of <strong>{totalReservations}</strong>
+          Showing <strong className="text-foreground">{totalReservations > 0 ? indexOfFirstReservation + 1 : 0}-{Math.min(indexOfLastReservation, totalReservations)}</strong> of <strong className="text-foreground">{totalReservations}</strong>
         </div>
         
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <span>Rows:</span>
             <Select value={String(rowsPerPage)} onValueChange={(v) => { setRowsPerPage(Number(v)); setCurrentPage(1); }}>
-              <SelectTrigger className="w-[70px] h-8">
+              <SelectTrigger className="w-[70px] h-8 bg-background border-input text-foreground">
                 <SelectValue placeholder={rowsPerPage} />
               </SelectTrigger>
               <SelectContent>
@@ -202,18 +199,17 @@ const ReservationTable = ({
                 <PaginationPrevious 
                   onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
                   disabled={currentPage === 1}
-                  className="h-8 px-2"
+                  className="h-8 px-2 cursor-pointer disabled:opacity-50"
                 />
               </PaginationItem>
-              {/* Simple Page Indicator */}
-              <PaginationItem className="px-2 font-medium">
+              <PaginationItem className="px-2 font-medium text-foreground">
                  Page {currentPage} of {totalPages || 1}
               </PaginationItem>
               <PaginationItem>
                 <PaginationNext 
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
                   disabled={currentPage === totalPages || totalPages === 0}
-                  className="h-8 px-2"
+                  className="h-8 px-2 cursor-pointer disabled:opacity-50"
                 />
               </PaginationItem>
             </PaginationContent>
