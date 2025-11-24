@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { useReservation } from '@/hooks/useReservation';
 import useProducts from '@/hooks/useProducts';
-import { ChevronLeft, CheckCircle2, AlertCircle } from 'lucide-react';
+import { ChevronLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 
 // Import the sub-components
 import CustomerDetailsCard from '@/components/reservation/CustomerDetailsCard';
@@ -16,7 +16,6 @@ import ReservationSummaryCard from '@/components/reservation/ReservationSummaryC
 const CreateManualBookingPage = () => {
   const router = useRouter();
 
-  // 1. USE HOOKS
   const { products, isLoading: isLoadingProducts, getAllProducts, error: productsError } = useProducts();
   const { createReservation, isLoading: isSubmitting, error: reservationError } = useReservation();
 
@@ -123,26 +122,45 @@ const CreateManualBookingPage = () => {
     const result = await createReservation(reservationPayload);
 
     if (result.success) {
-      router.push('/seller/products');
+      router.push('/seller/reservations/booking');
     } else {
       alert(`Failed to create reservation: ${result.error}`);
     }
   };
 
-  if (isLoadingProducts) return <div className="h-screen flex items-center justify-center text-slate-500 bg-slate-50">Loading products...</div>;
-  if (productsError) return <div className="h-screen flex items-center justify-center text-red-500 bg-slate-50 flex-col gap-2"><AlertCircle /> Error: {productsError}</div>;
+  if (isLoadingProducts) {
+     return (
+      <div className="h-screen flex items-center justify-center bg-muted/30">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading products...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (productsError) {
+    return (
+      <div className="h-screen flex items-center justify-center bg-muted/30 p-4">
+        <div className="bg-destructive/10 border border-destructive/20 text-destructive p-6 rounded-lg text-center">
+          <AlertCircle className="w-10 h-10 mx-auto mb-3" />
+          <p>Error loading data: {productsError}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-slate-50/50 min-h-screen pb-24">
+    <div className="bg-muted/30 min-h-screen pb-24">
       {/* Header */}
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-30 px-6 py-4">
+      <div className="bg-background border-b border-border sticky top-0 z-30 px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="text-slate-500 hover:text-slate-900" onClick={() => router.back()}>
+          <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" onClick={() => router.back()}>
             <ChevronLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-xl font-bold text-slate-900">New Reservation</h1>
-            <p className="text-xs text-slate-500">Create a manual booking for a walk-in or phone customer</p>
+            <h1 className="text-xl font-bold text-foreground">New Reservation</h1>
+            <p className="text-xs text-muted-foreground">Create a manual booking for a walk-in or phone customer</p>
           </div>
         </div>
       </div>
@@ -191,11 +209,11 @@ const CreateManualBookingPage = () => {
                   type="submit"
                   size="lg"
                   disabled={isSubmitting}
-                  className="w-full bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/10 h-12 text-base"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg h-12 text-base"
                 >
                   {isSubmitting ? (
                     <span className="flex items-center gap-2">
-                       Processing...
+                       <Loader2 className="w-4 h-4 animate-spin" /> Processing...
                     </span>
                   ) : (
                     <span className="flex items-center gap-2">
@@ -203,8 +221,8 @@ const CreateManualBookingPage = () => {
                     </span>
                   )}
                 </Button>
-                <p className="text-xs text-center text-slate-400">
-                  By clicking confirm, the reservation status will be set to <strong>Confirmed</strong> automatically.
+                <p className="text-xs text-center text-muted-foreground">
+                  By clicking confirm, the reservation status will be set to <strong className="text-foreground">Confirmed</strong> automatically.
                 </p>
               </div>
             </div>
