@@ -7,14 +7,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, LayoutGrid, List, Filter, ArrowUpDown } from 'lucide-react';
+import { Search, LayoutGrid, List, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const ProductFilterBar = ({
   onSearchChange,
   onStatusFilterChange,
   onCategoryFilterChange,
-  onSortChange,
   currentView,
   onViewChange,
   showBulkActions = false,
@@ -38,9 +37,10 @@ const ProductFilterBar = ({
           </div>
 
           <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0 hide-scrollbar">
-             {/* Status */}
+
+            {/* Status Filter */}
             <Select onValueChange={onStatusFilterChange}>
-              <SelectTrigger className="w-[130px] bg-background border-input text-foreground">
+              <SelectTrigger className="w-[130px] bg-background border-input text-foreground focus:outline-none focus:ring-0">
                 <div className="flex items-center gap-2 truncate">
                   <Filter className="w-3.5 h-3.5 text-muted-foreground" />
                   <SelectValue placeholder="Status" />
@@ -54,10 +54,10 @@ const ProductFilterBar = ({
               </SelectContent>
             </Select>
 
-            {/* Category */}
+            {/* Category Filter */}
             <Select onValueChange={onCategoryFilterChange}>
-              <SelectTrigger className="w-[140px] bg-background border-input text-foreground">
-                 <div className="flex items-center gap-2 truncate">
+              <SelectTrigger className="w-[140px] bg-background border-input text-foreground focus:outline-none focus:ring-0">
+                <div className="flex items-center gap-2 truncate">
                   <Filter className="w-3.5 h-3.5 text-muted-foreground" />
                   <SelectValue placeholder="Category" />
                 </div>
@@ -72,25 +72,10 @@ const ProductFilterBar = ({
                 <SelectItem value="Stationary">Stationary</SelectItem>
               </SelectContent>
             </Select>
-            
-             {/* Sort */}
-            <Select onValueChange={onSortChange}>
-              <SelectTrigger className="w-[140px] bg-background border-input text-foreground">
-                 <div className="flex items-center gap-2 truncate">
-                  <ArrowUpDown className="w-3.5 h-3.5 text-muted-foreground" />
-                  <SelectValue placeholder="Sort" />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="oldest">Oldest First</SelectItem>
-                <SelectItem value="price-low">Price: Low to High</SelectItem>
-                <SelectItem value="price-high">Price: High to Low</SelectItem>
-                <SelectItem value="name">Name: A-Z</SelectItem>
-              </SelectContent>
-            </Select>
+
           </div>
         </div>
+
 
         {/* Right: Actions & View */}
         <div className="flex items-center gap-3 w-full xl:w-auto justify-between xl:justify-end pt-2 xl:pt-0 border-t xl:border-t-0 border-border">
