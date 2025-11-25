@@ -1,6 +1,5 @@
 import React from 'react';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 import {
   Select,
   SelectContent,
@@ -15,14 +14,10 @@ import {
   PaginationPrevious,
   PaginationNext,
 } from '@/components/ui/pagination';
-import { CalendarClock, MoreHorizontal, Mail, Image as ImageIcon } from 'lucide-react';
+import { CalendarClock, Image as ImageIcon } from 'lucide-react';
 
 const ReservationTable = ({
   currentPaginatedReservations,
-  selectedReservationIds,
-  handleCheckboxChange,
-  handleMasterCheckboxChange,
-  isAllSelected,
   currentPage,
   setCurrentPage,
   rowsPerPage,
@@ -33,6 +28,7 @@ const ReservationTable = ({
   getCustomerInitials,
   products,
 }) => {
+  const router = useRouter();
 
   const getReservationProducts = (productIdsString) => {
     if (!productIdsString) return [];
@@ -44,23 +40,12 @@ const ReservationTable = ({
   const indexOfFirstReservation = (currentPage - 1) * rowsPerPage;
   const indexOfLastReservation = currentPage * rowsPerPage;
 
+  const handleRowClick = (reservationId) => {
+    router.push(`/admin/reservations/details/${reservationId}`);
+  };
+
   return (
     <div className="bg-card text-card-foreground rounded-xl shadow-sm border border-border overflow-hidden">
-      
-      {/* Bulk Action Header */}
-      {selectedReservationIds.size > 0 && (
-         <div className="bg-primary/10 px-6 py-3 flex items-center justify-between border-b border-primary/20 animate-in fade-in slide-in-from-top-1">
-            <span className="text-sm font-medium text-primary">
-              {selectedReservationIds.size} selected
-            </span>
-            <div className="flex gap-2">
-               <Button size="sm" variant="outline" className="bg-background border-input text-foreground hover:bg-muted">
-                 <Mail className="w-3.5 h-3.5 mr-2 text-muted-foreground"/> Send Reminder
-               </Button>
-            </div>
-         </div>
-      )}
-
       {/* Table */}
       <div className="overflow-x-auto">
         {currentPaginatedReservations.length === 0 ? (
@@ -75,17 +60,9 @@ const ReservationTable = ({
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-muted/50 border-b border-border">
-                <th className="py-4 px-6 w-[50px]">
-                  <Checkbox 
-                    checked={isAllSelected} 
-                    onCheckedChange={handleMasterCheckboxChange} 
-                    className="border-muted-foreground/30 data-[state=checked]:border-primary"
-                  />
-                </th>
                 <th className="py-3 px-6 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Customer</th>
                 <th className="py-3 px-6 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Products</th>
                 <th className="py-3 px-6 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date & Time</th>
-                <th className="py-3 px-6 text-xs font-semibold uppercase tracking-wider text-muted-foreground text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -93,16 +70,11 @@ const ReservationTable = ({
                 const reservedProducts = getReservationProducts(res.productName || "");
 
                 return (
-                  <tr key={res.id} className="group hover:bg-muted/30 transition-colors">
-                    {/* Checkbox */}
-                    <td className="py-4 px-6">
-                      <Checkbox
-                        checked={selectedReservationIds.has(res.id)}
-                        onCheckedChange={(checked) => handleCheckboxChange(res.id, checked)}
-                        className="border-muted-foreground/30 data-[state=checked]:border-primary"
-                      />
-                    </td>
-
+                  <tr 
+                    key={res.id} 
+                    onClick={() => handleRowClick(res.id)}
+                    className="group hover:bg-muted/30 transition-colors cursor-pointer"
+                  >
                     {/* Customer */}
                     <td className="py-4 px-6">
                       <div className="flex items-center gap-3">
@@ -156,13 +128,6 @@ const ReservationTable = ({
                         </span>
                       </div>
                     </td>
-
-                    {/* Actions */}
-                    <td className="py-4 px-6 text-right">
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                           <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                    </td>
                   </tr>
                 );
               })}
@@ -206,7 +171,7 @@ const ReservationTable = ({
               </PaginationItem>
               <PaginationItem>
                 <PaginationNext 
-                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1)) } 
                   disabled={currentPage === totalPages || totalPages === 0}
                   className="h-8 px-2 cursor-pointer disabled:opacity-50"
                 />

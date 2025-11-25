@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { useReservation } from '@/hooks/useReservation';
 import useProducts from '@/hooks/useProducts';
 
@@ -10,12 +9,9 @@ import ReservationTable from '@/components/reservation/ReservationTable';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 const ReservationsPage = () => {
-  const router = useRouter();
-  
   const { reservations, isLoading: isLoadingReservations, error, getAllReservations } = useReservation();
   const { products, getAllProducts } = useProducts();
 
-  const [selectedReservationIds, setSelectedReservationIds] = useState(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   const [sortBy, setSortBy] = useState('Date (Newest First)');
@@ -101,24 +97,6 @@ const ReservationsPage = () => {
   const indexOfFirstReservation = indexOfLastReservation - rowsPerPage;
   const currentPaginatedReservations = displayedReservations.slice(indexOfFirstReservation, indexOfLastReservation);
 
-  const handleCheckboxChange = (reservationId, isChecked) => {
-    setSelectedReservationIds((prev) => {
-      const newSelected = new Set(prev);
-      isChecked ? newSelected.add(reservationId) : newSelected.delete(reservationId);
-      return newSelected;
-    });
-  };
-
-  const handleMasterCheckboxChange = (isChecked) => {
-    if (isChecked) {
-      setSelectedReservationIds(new Set(currentPaginatedReservations.map((res) => res.id)));
-    } else {
-      setSelectedReservationIds(new Set());
-    }
-  };
-
-  const isAllSelected = currentPaginatedReservations.length > 0 && selectedReservationIds.size === currentPaginatedReservations.length;
-
   const onClearFilters = () => {
     setSearchTerm('');
     setActiveTab('all');
@@ -163,12 +141,7 @@ const ReservationsPage = () => {
         />
 
         <ReservationTable
-          displayedReservations={displayedReservations}
           currentPaginatedReservations={currentPaginatedReservations}
-          selectedReservationIds={selectedReservationIds}
-          handleCheckboxChange={handleCheckboxChange}
-          handleMasterCheckboxChange={handleMasterCheckboxChange}
-          isAllSelected={isAllSelected}
           currentPage={currentPage}
           setCurrentPage={setCurrentPage}
           rowsPerPage={rowsPerPage}
