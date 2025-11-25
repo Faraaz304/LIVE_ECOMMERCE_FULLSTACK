@@ -13,7 +13,8 @@ const SelectedProductsCard = ({ products, isLoading, totalValue }) => {
       <CardContent className="pt-6 flex-1 flex flex-col">
         
         {isLoading ? (
-          <div className="space-y-4">
+          <div className="space-y-4" >
+            
              {[1, 2, 3].map(i => (
                <div key={i} className="h-20 bg-muted animate-pulse rounded-lg border border-border"></div>
              ))}
