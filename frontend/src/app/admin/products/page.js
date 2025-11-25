@@ -3,8 +3,8 @@
 import React from 'react';
 import SharedProductList from '@/components/products/SharedProductList';
 
-const SellerProductsPage = () => {
-  return <SharedProductList basePath="/seller" />;
+const AdminProductsPage = () => {
+  return <SharedProductList basePath="/admin" />;
 };
 
-export default SellerProductsPage;
+export default AdminProductsPage;
