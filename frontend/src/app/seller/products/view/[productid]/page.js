@@ -82,9 +82,12 @@ const ProductDetailPage = () => {
   };
 
   const formatPrice = (price) => {
-    if (!price) return '0';
-    return Number(price).toLocaleString('en-IN');
-  };
+  if (!price) return price;
+  const clean = price.toString().replace(/,/g, "").trim();
+  if (clean.length > 15) return clean;
+  const num = Number(clean);
+  return isNaN(num) ? price : num.toLocaleString("en-IN");
+};
 
   const handleDeleteProduct = async () => {
     setShowDeleteModal(false);

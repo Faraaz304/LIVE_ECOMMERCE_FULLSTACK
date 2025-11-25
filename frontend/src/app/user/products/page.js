@@ -1,9 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import useProducts from '@/hooks/useProducts';
-import { Button } from '@/components/ui/button'; // Still needed for pagination buttons, etc.
 
 // Import the shared components
 import ProductFilterBar from '@/components/products/ProductFilterBar';
@@ -11,7 +9,6 @@ import ProductGridView from '@/components/products/ProductGridView';
 import ProductListView from '@/components/products/ProductListView';
 
 const UserProductsPage = () => {
-  const router = useRouter();
   const { products, isLoading, error, getAllProducts } = useProducts(); // No deleteProduct needed here
 
   const [currentView, setCurrentView] = useState('grid');
@@ -70,65 +67,66 @@ const UserProductsPage = () => {
 
 
   if (isLoading) {
-    return (
-      <div className="p-8 flex-1 flex items-center justify-center bg-[#f9fafb]">
-        <p className="text-xl text-[#6b7280]">Loading products...</p>
-      </div>
-    );
+    return <div className="h-screen flex items-center justify-center bg-muted/30 text-muted-foreground animate-pulse">Loading products...</div>;
   }
 
   if (error) {
-    return (
-      <div className="p-8 flex-1 flex items-center justify-center bg-[#f9fafb]">
-        <p className="text-xl text-[#ef4444]">{error}</p>
-      </div>
-    );
+    return <div className="h-screen flex items-center justify-center bg-muted/30 text-destructive">Error: {error}</div>;
   }
 
   return (
-    <div className="p-8 flex-1">
-      {/* Page Header - No "Add Product" button for users */}
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-[#111827]">Explore Products</h1>
-        {/* No Add Product Button for users */}
-      </div>
+    <div className="min-h-screen bg-muted/30 p-4 sm:p-8">
+      <div className="max-w-7xl mx-auto space-y-6">
+        
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">Explore Products</h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              Browse and discover products from our catalog.
+            </p>
+          </div>
+        </div>
 
-      {/* Filter Bar - No bulk actions for users */}
-      <ProductFilterBar
-        onSearchChange={setSearchTerm}
-        onStatusFilterChange={setFilterStatus}
-        onCategoryFilterChange={setFilterCategory}
-        onSortChange={setSortBy}
-        currentView={currentView}
-        onViewChange={setCurrentView}
-        showBulkActions={false} // Crucial: Disable bulk actions for users
-        // onBulkAction is not passed as showBulkActions is false
-      />
-
-      {/* Conditionally render Grid or List View, or Empty State */}
-      {displayedProducts.length === 0 && !isLoading ? (
-        <ProductGridView
-          products={[]}
-          showAddProductButton={false} // Crucial: Hide add product button
+        {/* Filters */}
+        <ProductFilterBar
+          onSearchChange={setSearchTerm}
+          onStatusFilterChange={setFilterStatus}
+          onCategoryFilterChange={setFilterCategory}
+          onSortChange={setSortBy}
+          currentView={currentView}
+          onViewChange={setCurrentView}
+          showBulkActions={false} // Crucial: Disable bulk actions for users
+          // onBulkAction is not passed as showBulkActions is false
         />
-      ) : (
-        currentView === 'grid' ? (
+
+        {/* Content */}
+        {displayedProducts.length === 0 ? (
           <ProductGridView
-            products={displayedProducts}
+            products={[]}
             showAddProductButton={false} // Crucial: Hide add product button
           />
         ) : (
-          <ProductListView
-            products={displayedProducts}
-            selectedProductIds={new Set()} // No selections for users
-            onCheckboxChange={() => {}} // No-op for users
-            onMasterCheckboxChange={() => {}} // No-op for users
-            isAllSelected={false} // No selections for users
-            onDeleteProduct={() => {}} // No-op for users
-            showActions={false} // Crucial: Hide actions column and checkboxes for users
-          />
-        )
-      )}
+          <div className="animate-in fade-in duration-500">
+            {currentView === 'grid' ? (
+              <ProductGridView
+                products={displayedProducts}
+                showAddProductButton={false} // Crucial: Hide add product button
+              />
+            ) : (
+              <ProductListView
+                products={displayedProducts}
+                selectedProductIds={new Set()} // No selections for users
+                onCheckboxChange={() => {}} // No-op for users
+                onMasterCheckboxChange={() => {}} // No-op for users
+                isAllSelected={false} // No selections for users
+                onDeleteProduct={() => {}} // No-op for users
+                showActions={false} // Crucial: Hide actions column and checkboxes for users
+              />
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
