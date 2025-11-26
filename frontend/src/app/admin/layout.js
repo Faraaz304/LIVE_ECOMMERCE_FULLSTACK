@@ -1,53 +1,78 @@
 'use client';
 
-import { useState, useEffect } from 'react'; // Import useEffect
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import AdminSidebar from '@/components/ui/adminSidebar';
-import { Button } from '@/components/ui/button';
+import AdminSidebar from '@/components/ui/adminSidebar'; // Adjust path if needed
+import { Button } from '@/components/ui/button'; // Adjust path if needed
+import { useAuth } from '@/hooks/useAuth'; // Import the hook (Adjust path if needed)
 
 export default function AdminLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [userName] = useState('Admin'); // Consider making this dynamic, e.g., from localStorage.getItem('userEmail')
-  const [isAuthorized, setIsAuthorized] = useState(false); // State to track authorization
-  const [loading, setLoading] = useState(true); // State to manage loading status
+  const [userName, setUserName] = useState('Admin'); 
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [loading, setLoading] = useState(true);
+  
   const router = useRouter();
+  
+  // Destructure the new function from your custom hook
+  const { fetchUserById } = useAuth();
 
   useEffect(() => {
-    const checkAuthorization = () => {
-      const role = localStorage.getItem("userRole");
-      if (role !== "ADMIN") { // Correctly check if the role is NOT "ADMIN"
+    const checkAuthorization = async () => {
+      try {
+        // 1. Check if ID exists in local storage
+        const storedUserId = localStorage.getItem('userid');
+        
+        if (!storedUserId) {
+          console.warn('No User ID found, redirecting to login.');
+          router.push('/login');
+          return;
+        }
+
+        // 2. Fetch fresh user data using the hook
+        // This automatically handles the Token injection inside useAuth
+        const user = await fetchUserById(storedUserId);
+
+        // 3. Verify User exists and has ADMIN role
+        if (user && user.role === 'ADMIN') {
+          setIsAuthorized(true);
+          setUserName(user.username || 'Admin'); // Set dynamic username
+        } else {
+          console.warn('User is not authorized or not an Admin.');
+          router.push('/login');
+        }
+      } catch (error) {
+        console.error('Authorization check failed:', error);
         router.push('/login');
-      } else {
-        setIsAuthorized(true);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false); // Set loading to false once the check is done
     };
 
     checkAuthorization();
-  }, [router]); // Add router to the dependency array, though it's typically stable
+  }, [router, fetchUserById]); 
 
   const handleLogout = () => {
-    localStorage.clear(); // Clears userEmail and userRole
-    // If you're storing the JWT in an HttpOnly cookie, the browser will clear it on session end or specific server instructions.
-    // If your accessToken cookie is NOT HttpOnly and client-side accessible (as per your useAuth hook),
-    // you might want to explicitly clear it here:
-    // document.cookie = 'accessToken=; path=/; max-age=0; SameSite=Lax';
+    // Clear all auth data
+    localStorage.removeItem('userid');
+    localStorage.removeItem('token');
+    // localStorage.clear(); // Use this if you want to wipe everything
+    
     router.push('/login');
   };
 
-  // Show a loading indicator while authorization is being checked
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        Loading authorization...
+        {/* You can replace this with a proper Spinner component */}
+        <div className="text-lg font-medium animate-pulse">Verifying Admin Access...</div>
       </div>
     );
   }
 
-  // If not authorized (and not redirecting immediately), return null or a specific message
-  // This case should ideally be caught by the router.push('/login') above.
+  // Double check to prevent flash of content if redirect lags
   if (!isAuthorized) {
-    return null; // Or render an "Access Denied" message if not redirecting immediately
+    return null; 
   }
 
   return (

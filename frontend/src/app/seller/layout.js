@@ -1,55 +1,74 @@
 'use client';
 
-import { useState, useEffect } from 'react'; // Import useEffect
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import SellerSidebar from '@/components/ui/sellerSidebar';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth'; // Import the hook (Adjust path if needed)
 
 export default function SellerLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [userName] = useState('Seller'); // Consider making this dynamic
-  const [isAuthorized, setIsAuthorized] = useState(false); // State to track authorization
-  const [loading, setLoading] = useState(true); // State to manage loading status
+  const [userName, setUserName] = useState('Seller'); 
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [loading, setLoading] = useState(true);
+  
   const router = useRouter();
+  const { fetchUserById } = useAuth();
 
   useEffect(() => {
-    const checkAuthorization = () => {
-      const role = localStorage.getItem("userRole");
-      if (role !== "SELLER") { // Check if the role is NOT "SELLER"
+    const checkAuthorization = async () => {
+      try {
+        const storedUserId = localStorage.getItem('userid');
+        
+        if (!storedUserId) {
+          router.push('/login');
+          return;
+        }
+
+        // Fetch fresh user data (validates token implicitly)
+        const user = await fetchUserById(storedUserId);
+
+        // Check if user exists and has SELLER role
+        if (user && user.role === 'SELLER') {
+          setIsAuthorized(true);
+          setUserName(user.username || 'Seller');
+        } else {
+          // If token is valid but role is wrong (e.g., a User trying to access Seller dashboard)
+          console.warn('Unauthorized access to Seller area.');
+          router.push('/login');
+        }
+      } catch (error) {
+        console.error('Authorization check failed:', error);
         router.push('/login');
-      } else {
-        setIsAuthorized(true);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false); // Set loading to false once the check is done
     };
 
     checkAuthorization();
-  }, [router]);
+  }, [router, fetchUserById]);
 
   const handleGoLive = () => {
     router.push('/seller/streams/create');
   };
 
   const handleLogout = () => {
-    localStorage.clear();
-    // If your accessToken cookie is not HttpOnly and client-side accessible,
-    // you might want to explicitly clear it here:
-    // document.cookie = 'accessToken=; path=/; max-age=0; SameSite=Lax';
+    localStorage.removeItem('userid');
+    localStorage.removeItem('token');
+    // localStorage.clear(); // Optional: Clear everything
     router.push('/login');
   };
 
-  // Show a loading indicator while authorization is being checked
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        Loading authorization...
+        Loading Seller Dashboard...
       </div>
     );
   }
 
-  // If not authorized (and not redirecting immediately), return null or a specific message
   if (!isAuthorized) {
-    return null; // Or render an "Access Denied" message if not redirecting immediately
+    return null;
   }
 
   return (
@@ -61,7 +80,6 @@ export default function SellerLayout({ children }) {
         userName={userName}
       />
 
-      {/* Mobile menu button */}
       <Button
         variant="outline"
         size="icon"
@@ -71,12 +89,10 @@ export default function SellerLayout({ children }) {
         <span className="text-2xl">{sidebarOpen ? '✕' : '☰'}</span>
       </Button>
 
-      {/* Main content */}
       <main className="flex-1 overflow-y-auto md:ml-[260px]">
         {children}
       </main>
 
-      {/* Overlay for mobile */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"

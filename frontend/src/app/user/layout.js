@@ -1,51 +1,68 @@
 'use client';
 
-import { useState, useEffect } from 'react'; // Import useEffect
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import UserSidebar from '@/components/ui/userSidebar';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth'; // Import the hook (Adjust path if needed)
 
 export default function UserLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [userName] = useState('User'); // Consider making this dynamic
-  const [isAuthorized, setIsAuthorized] = useState(false); // State to track authorization
-  const [loading, setLoading] = useState(true); // State to manage loading status
+  const [userName, setUserName] = useState('User'); 
+  const [isAuthorized, setIsAuthorized] = useState(false);
+  const [loading, setLoading] = useState(true);
+  
   const router = useRouter();
+  const { fetchUserById } = useAuth();
 
   useEffect(() => {
-    const checkAuthorization = () => {
-      const role = localStorage.getItem("userRole");
-      if (role !== "USER") { // Check if the role is NOT "USER"
+    const checkAuthorization = async () => {
+      try {
+        const storedUserId = localStorage.getItem('userid');
+        
+        if (!storedUserId) {
+          router.push('/login');
+          return;
+        }
+
+        // Fetch fresh user data
+        const user = await fetchUserById(storedUserId);
+
+        // Check if user exists and has USER role
+        if (user && user.role === 'USER') {
+          setIsAuthorized(true);
+          setUserName(user.username || 'User');
+        } else {
+          console.warn('Unauthorized access to User area.');
+          router.push('/login');
+        }
+      } catch (error) {
+        console.error('Authorization check failed:', error);
         router.push('/login');
-      } else {
-        setIsAuthorized(true);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false); // Set loading to false once the check is done
     };
 
     checkAuthorization();
-  }, [router]);
+  }, [router, fetchUserById]);
 
   const handleLogout = () => {
-    localStorage.clear();
-    // If your accessToken cookie is not HttpOnly and client-side accessible,
-    // you might want to explicitly clear it here:
-    // document.cookie = 'accessToken=; path=/; max-age=0; SameSite=Lax';
+    localStorage.removeItem('userid');
+    localStorage.removeItem('token');
     router.push('/login');
   };
 
-  // Show a loading indicator while authorization is being checked
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        Loading authorization...
+        Loading User Dashboard...
       </div>
     );
   }
 
-  // If not authorized (and not redirecting immediately), return null or a specific message
   if (!isAuthorized) {
-    return null; // Or render an "Access Denied" message if not redirecting immediately
+    return null;
   }
 
   return (
@@ -56,7 +73,6 @@ export default function UserLayout({ children }) {
         userName={userName}
       />
 
-      {/* Mobile menu button */}
       <Button
         variant="outline"
         size="icon"
@@ -66,12 +82,10 @@ export default function UserLayout({ children }) {
         <span className="text-2xl">{sidebarOpen ? '✕' : '☰'}</span>
       </Button>
 
-      {/* Main content */}
       <main className="flex-1 overflow-y-auto md:ml-[260px]">
         {children}
       </main>
 
-      {/* Overlay for mobile */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-30 md:hidden"

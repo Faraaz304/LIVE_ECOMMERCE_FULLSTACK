@@ -14,6 +14,7 @@ export const useAuth = () => {
     setSuccessMessage(null);
   };
 
+  // Helper to handle Login and Register
   const executeAuthRequest = async (endpoint, data) => {
     clearMessages();
     setIsSubmitting(true);
@@ -36,33 +37,22 @@ export const useAuth = () => {
           result = JSON.parse(responseText);
         } catch (parseError) {
           console.warn(`Backend responded with non-JSON text on ${endpoint}:`, responseText, parseError);
-          throw new Error(`Server responded unexpectedly. Please try again. (Raw response: ${responseText.substring(0, 100)})`);
+          throw new Error(`Server responded unexpectedly. Please try again.`);
         }
       }
 
       if (!response.ok) {
-        throw new Error(result?.message || `Operation failed. Server error: ${response.status} ${response.statusText}.`);
+        throw new Error(result?.message || `Operation failed. Server error: ${response.status}.`);
       }
 
-      // Store JWT token in a cookie
-      if (result && result.token) {
-        document.cookie = `accessToken=${result.token}; path=/; max-age=86400; SameSite=Lax; HttpOnly=false`; // Consider HttpOnly=true for better security if only used by server-side, but client needs it here. SameSite=Lax is a good default.
-        // For development, you might set secure: false, but in production, it should be true.
-        // Example with secure and httpOnly (for server-only access):
-        // document.cookie = `accessToken=${result.token}; path=/; max-age=86400; SameSite=Lax; HttpOnly; Secure`;
-      }
-
-
-      // Store non-sensitive user details in localStorage
-      if (result && result.email && result.role) {
-        localStorage.setItem('userEmail', result.email);
-        localStorage.setItem('userRole', result.role);
-        localStorage.setItem('userid' , result.userid );
-        
-      }
+      // --- SAVE DATA TO LOCAL STORAGE ---
+      if (result.userid) localStorage.setItem('userid', result.userid);
+      // We assume the backend returns a field called 'token' or 'jwt'. 
+      // Adjust 'token' below to match your actual backend response key.
+      if (result.token) localStorage.setItem('token', result.token); 
 
       setSuccessMessage(`${endpoint === 'login' ? 'Login' : 'Registration'} successful!`);
-      return result; // Return the full result including token, email, role
+      return result; 
     } catch (err) {
       console.error(`Error during ${endpoint}:`, err);
       setSubmitError(err.message || `An unknown error occurred during ${endpoint}.`);
@@ -80,12 +70,60 @@ export const useAuth = () => {
     return executeAuthRequest('register', { username, email, password, role });
   };
 
+  // --- NEW FUNCTION: Get User By ID ---
+  const fetchUserById = async (id) => {
+    clearMessages();
+    setIsSubmitting(true);
+
+    try {
+      // Retrieve the token saved during login
+      const token = localStorage.getItem('token'); 
+
+      if (!token) {
+        throw new Error("No authentication token found. Please login first.");
+      }
+
+      const response = await fetch(`${API_BASE_URL}/api/auth/user/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          // Standard way to pass JWT is via Authorization header
+          'Authorization': `Bearer ${token}` 
+        },
+      });
+
+      const responseText = await response.text();
+      let result = null;
+
+      if (responseText) {
+        try {
+          result = JSON.parse(responseText);
+        } catch (parseError) {
+          throw new Error("Failed to parse server response.");
+        }
+      }
+
+      if (!response.ok) {
+        throw new Error(result?.message || `Failed to fetch user. Status: ${response.status}`);
+      }
+
+      return result; // Returns { id, username, email, password, role }
+    } catch (err) {
+      console.error("Error fetching user details:", err);
+      setSubmitError(err.message);
+      return null;
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return {
     login,
     register,
+    fetchUserById, // Exporting the new function
     isSubmitting,
     submitError,
     successMessage,
-    clearMessages, // Allows clearing messages manually if needed
+    clearMessages,
   };
 };
