@@ -57,6 +57,8 @@ export const useAuth = () => {
       if (result && result.email && result.role) {
         localStorage.setItem('userEmail', result.email);
         localStorage.setItem('userRole', result.role);
+        localStorage.setItem('userid' , result.userid );
+        
       }
 
       setSuccessMessage(`${endpoint === 'login' ? 'Login' : 'Registration'} successful!`);

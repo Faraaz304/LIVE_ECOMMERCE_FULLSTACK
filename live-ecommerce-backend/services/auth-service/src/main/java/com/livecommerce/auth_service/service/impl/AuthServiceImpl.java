@@ -39,7 +39,9 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Username already taken");
         }
 
+
         User user = new User();
+        user.setId(user.getId());
         user.setEmail(request.getEmail());
         user.setUsername(request.getUsername());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
@@ -57,6 +59,7 @@ public class AuthServiceImpl implements AuthService {
                 .refreshToken(refreshToken)
                 .email(user.getEmail())
                 .role(user.getRole())
+                .userid(user.getId().toString())
                 .build();
     }
 
@@ -83,6 +86,7 @@ public class AuthServiceImpl implements AuthService {
                 .refreshToken(refreshToken)
                 .email(user.getEmail())
                 .role(user.getRole())
+                .userid(user.getId().toString())
                 .build();
     }
 
@@ -136,5 +140,11 @@ public class AuthServiceImpl implements AuthService {
             return userDetails.getUsername(); // In our case, username is the email
         }
         throw new RuntimeException("No authenticated user found");
+    }
+
+    @Override
+    public User getuserbyid (Long id) {
+        return userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
+
     }
 }

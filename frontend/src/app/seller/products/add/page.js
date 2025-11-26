@@ -14,6 +14,7 @@ const AddProductPage = () => {
   const { createProduct, isLoading, error: createError } = useProducts();
 
   const [formData, setFormData] = useState({
+    username:'',
     name: '',
     description: '',
     price: '',
@@ -71,6 +72,7 @@ const AddProductPage = () => {
     }
 
     const productPayload = {
+      username: formData.username.trim(),
       name: formData.name.trim(),
       description: formData.description.trim(),
       price: parseFloat(formData.price),

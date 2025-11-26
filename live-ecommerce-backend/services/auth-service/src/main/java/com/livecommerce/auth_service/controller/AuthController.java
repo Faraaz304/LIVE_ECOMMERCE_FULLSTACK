@@ -3,6 +3,7 @@ package com.livecommerce.auth_service.controller;
 import com.livecommerce.auth_service.dto.AuthResponse;
 import com.livecommerce.auth_service.dto.LoginRequest;
 import com.livecommerce.auth_service.dto.RegisterRequest;
+import com.livecommerce.auth_service.entity.User;
 import com.livecommerce.auth_service.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -86,6 +87,17 @@ public class AuthController {
                     "authenticatedUser", email,
                     "timestamp", System.currentTimeMillis()));
         } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/user/{id}")
+    public ResponseEntity<?> getUserById(@PathVariable Long id) {
+        try {
+            User response = authService.getuserbyid(id);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(Map.of(
                     "error", e.getMessage()));
         }
