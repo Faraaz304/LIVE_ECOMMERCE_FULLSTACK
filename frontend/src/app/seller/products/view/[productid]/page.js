@@ -25,6 +25,7 @@ const SellerProductDetailPage = () => {
   }, [productid, getProductById]);
 
   const handleDeleteProduct = async () => {
+
     setShowDeleteModal(false);
     try {
       const result = await deleteProduct(productid);

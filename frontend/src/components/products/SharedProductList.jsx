@@ -65,7 +65,14 @@ const SharedProductList = ({ basePath }) => {
     return currentProducts;
   }, [products, searchTerm, filterStatus, filterCategory, sortBy]);
 
-  const displayedProducts = filteredAndSortedProducts();
+  const allProducts = filteredAndSortedProducts();
+  const currentUserId = localStorage.getItem('userid');
+  console.log(currentUserId)
+
+
+  const displayedProducts = allProducts.filter(product => {
+      return product.userid && Number(product.userid) === Number(currentUserId);
+  });
 
   // --- Handlers ---
   const handleCheckboxChange = (productId, isChecked) => {

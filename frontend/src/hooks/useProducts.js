@@ -2,14 +2,12 @@ import { useState, useCallback } from "react";
 
 const BASE_URL = "http://localhost:8082/api/products";
 
-/**
- * Format a raw product from the API into frontend-friendly structure.
- */
 const formatProductData = (product) => {
   if (!product) return null;
 
   return {
     id: product.id.toString(),
+    userid: product.userid, 
     name: product.name,
     description: product.description,
     price: new Intl.NumberFormat("en-IN").format(product.price),
@@ -25,29 +23,20 @@ const formatProductData = (product) => {
   };
 };
 
-/**
- * A stable, fully optimized custom hook for product management.
- */
 const useProducts = () => {
   const [products, setProducts] = useState([]);
   const [product, setProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  /**
-   * Fetch all products (stable, no infinite loops).
-   */
   const getAllProducts = useCallback(async () => {
     setIsLoading(true);
     setError(null);
-
     try {
       const response = await fetch(BASE_URL);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
       const data = await response.json();
       const formatted = data.map(formatProductData);
-
       setProducts(formatted);
       return formatted;
     } catch (err) {
@@ -57,22 +46,16 @@ const useProducts = () => {
     } finally {
       setIsLoading(false);
     }
-  }, []); // stable forever
+  }, []); 
 
-  /**
-   * Fetch single product by ID.
-   */
   const getProductById = useCallback(async (id) => {
     setIsLoading(true);
     setError(null);
-
     try {
       const response = await fetch(`${BASE_URL}/${id}`);
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-
       const data = await response.json();
       const formatted = formatProductData(data);
-
       setProduct(formatted);
       return formatted;
     } catch (err) {
@@ -84,16 +67,20 @@ const useProducts = () => {
     }
   }, []);
 
-  /**
-   * Create new product.
-   */
   const createProduct = useCallback(async (productData, imageFile) => {
     setIsLoading(true);
     setError(null);
-
     try {
+      const storedUserId = localStorage.getItem('userid');
+      if (!storedUserId) throw new Error("User ID not found. Please log in.");
+
+      const finalProductData = {
+        ...productData,
+        userid: Number(storedUserId) 
+      };
+
       const formData = new FormData();
-      formData.append("product", JSON.stringify(productData));
+      formData.append("product", JSON.stringify(finalProductData));
       if (imageFile) formData.append("image", imageFile);
 
       const response = await fetch(BASE_URL, {
@@ -105,7 +92,6 @@ const useProducts = () => {
         const errorText = await response.text();
         throw new Error(errorText);
       }
-
       const newProduct = await response.json();
       return { success: true, product: formatProductData(newProduct) };
     } catch (err) {
@@ -119,15 +105,32 @@ const useProducts = () => {
 
   /**
    * Update product.
+   * FIX: Now automatically injects userid so the relationship isn't broken/orphaned.
    */
   const updateProduct = useCallback(async (id, productData, imageFile) => {
     setIsLoading(true);
     setError(null);
 
     try {
+      // 1. Get User ID from Local Storage
+      const storedUserId = localStorage.getItem('userid');
+      
+      if (!storedUserId) {
+        throw new Error("User ID missing. Cannot verify ownership for update.");
+      }
+
+      // 2. Merge userid into the update payload
+      const finalProductData = { 
+        ...productData, 
+        userid: Number(storedUserId) 
+      };
+      
       const formData = new FormData();
-      formData.append("product", JSON.stringify(productData));
-      if (imageFile) formData.append("image", imageFile);
+      formData.append("product", JSON.stringify(finalProductData));
+      
+      if (imageFile) {
+        formData.append("image", imageFile);
+      }
 
       const response = await fetch(`${BASE_URL}/${id}`, {
         method: "PUT",
@@ -150,20 +153,15 @@ const useProducts = () => {
     }
   }, []);
 
-  /**
-   * Delete product.
-   */
   const deleteProduct = useCallback(async (id) => {
     setIsLoading(true);
     setError(null);
-
     try {
       const response = await fetch(`${BASE_URL}/${id}`, { method: "DELETE" });
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(errorText);
       }
-
       setProducts((prev) => prev.filter((p) => p.id !== id.toString()));
       return { success: true };
     } catch (err) {

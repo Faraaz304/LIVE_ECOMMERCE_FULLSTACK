@@ -133,7 +133,10 @@ const EditProductPage = () => {
     }
   };
 
+   
+
   const handleDeleteProduct = async () => {
+
     setShowDeleteModal(false);
     setSubmitError(null);
     setDeleteLoading(true);

@@ -13,8 +13,8 @@ const AddProductPage = () => {
   const router = useRouter();
   const { createProduct, isLoading, error: createError } = useProducts();
 
+  // Removed 'username' as it is not needed here
   const [formData, setFormData] = useState({
-    username:'',
     name: '',
     description: '',
     price: '',
@@ -71,8 +71,8 @@ const AddProductPage = () => {
       return;
     }
 
+    // Prepare payload (username is NOT needed, userid is added in hook)
     const productPayload = {
-      username: formData.username.trim(),
       name: formData.name.trim(),
       description: formData.description.trim(),
       price: parseFloat(formData.price),
