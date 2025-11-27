@@ -51,6 +51,7 @@ export default function AdminLayout({ children }) {
 
     checkAuthorization();
   }, [router, fetchUserById]); 
+  
 
   const handleLogout = () => {
     // Clear all auth data

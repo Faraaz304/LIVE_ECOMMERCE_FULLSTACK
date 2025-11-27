@@ -3,12 +3,13 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '../../../hooks/useAuth'; 
+import { useAuth } from '../../../hooks/useAuth';
 
 const LoginPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get('redirect') || null;
+
   const { login, isSubmitting, submitError, successMessage, clearMessages } = useAuth();
 
   const [formData, setFormData] = useState({ email: '', password: '' });
@@ -24,14 +25,18 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     clearMessages();
+
     const result = await login(formData.email, formData.password);
+
     if (result) {
       setFormData({ email: '', password: '' });
+
       setTimeout(() => {
-        if (redirectPath) router.push(redirectPath);
-        else if (result.role === 'USER') router.push('/user/dashboard');
-        else if (result.role === 'ADMIN') router.push('/admin/dashboard');
+        if (redirectPath) {
+          router.push(redirectPath);
+        } else if (result.role === 'USER') router.push('/user/dashboard');
         else if (result.role === 'SELLER') router.push('/seller/dashboard');
+        else if (result.role === 'ADMIN') router.push('/admin/dashboard');
         else router.push('/');
       }, 0);
     }
@@ -44,7 +49,7 @@ const LoginPage = () => {
           Welcome back
         </h1>
         <p className="text-sm text-muted-foreground">
-          Enter your email below to login to your account
+          Enter your email below to log in
         </p>
       </div>
 
@@ -62,19 +67,14 @@ const LoginPage = () => {
             disabled={isSubmitting}
             value={formData.email}
             onChange={handleInputChange}
-            className="flex h-11 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-11 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           />
         </div>
 
         <div className="grid gap-2">
-          <div className="flex items-center justify-between">
-            <label className="text-sm font-medium leading-none" htmlFor="password">
-              Password
-            </label>
-            <Link href="#" className="text-sm font-medium text-primary hover:underline underline-offset-4">
-              Forgot password?
-            </Link>
-          </div>
+          <label className="text-sm font-medium leading-none" htmlFor="password">
+            Password
+          </label>
           <input
             id="password"
             name="password"
@@ -83,17 +83,18 @@ const LoginPage = () => {
             disabled={isSubmitting}
             value={formData.password}
             onChange={handleInputChange}
-            className="flex h-11 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-11 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           />
         </div>
 
         {submitError && (
-          <div className="p-3 rounded-md bg-destructive/10 border border-destructive/20 text-sm text-destructive font-medium text-center">
+          <div className="p-3 rounded-md bg-destructive/10 border text-destructive text-center text-sm">
             {submitError}
           </div>
         )}
+
         {successMessage && (
-          <div className="p-3 rounded-md bg-green-500/10 border border-green-500/20 text-sm text-green-600 dark:text-green-400 font-medium text-center">
+          <div className="p-3 rounded-md bg-green-500/10 border text-green-600 text-center text-sm">
             {successMessage}
           </div>
         )}
@@ -101,7 +102,7 @@ const LoginPage = () => {
         <button
           type="submit"
           disabled={isSubmitting}
-          className="inline-flex h-11 items-center justify-center rounded-md bg-primary px-8 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+          className="inline-flex h-11 items-center justify-center rounded-md bg-primary px-8 text-sm text-primary-foreground shadow hover:bg-primary/90"
         >
           {isSubmitting ? 'Logging in...' : 'Sign In'}
         </button>
@@ -109,7 +110,7 @@ const LoginPage = () => {
 
       <div className="text-center text-sm text-muted-foreground">
         Don&apos;t have an account?{" "}
-        <Link href="/register" className="font-medium text-primary hover:underline underline-offset-4">
+        <Link href="/register" className="text-primary hover:underline">
           Register
         </Link>
       </div>

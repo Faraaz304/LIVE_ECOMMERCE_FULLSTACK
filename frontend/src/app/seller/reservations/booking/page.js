@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'; // Import Shadcn Alert
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useReservation } from '@/hooks/useReservation';
 import useProducts from '@/hooks/useProducts';
 import { ChevronLeft, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
@@ -71,12 +71,32 @@ const CreateManualBookingPage = () => {
     return slots;
   }, []);
 
+  // --- FETCH PRODUCTS (Updated to pass User ID) ---
   useEffect(() => {
-    getAllProducts();
+    const storedUserId = localStorage.getItem('userid');
+    if (storedUserId) {
+      // Pass userId to the hook as requested
+      getAllProducts(storedUserId);
+    } else {
+      // If no user ID is found, force login or handle error
+      console.warn("No user ID found in local storage.");
+      // Optional: router.push('/login');
+    }
   }, [getAllProducts]);
 
+  // --- FILTER PRODUCTS (Updated to show ONLY user's products) ---
   useEffect(() => {
+    const storedUserId = Number(localStorage.getItem('userid'));
+    
+    // Start with all products fetched
     let currentProducts = products;
+
+    // 1. Strict Filter: Only show products belonging to this user
+    if (storedUserId) {
+      currentProducts = currentProducts.filter(p => p.userid === storedUserId);
+    }
+
+    // 2. Search Filter: Apply name/SKU search
     if (productSelection.searchTerm) {
       const lowerCaseSearch = productSelection.searchTerm.toLowerCase();
       currentProducts = currentProducts.filter(p =>
@@ -84,6 +104,7 @@ const CreateManualBookingPage = () => {
         p.sku?.toLowerCase().includes(lowerCaseSearch)
       );
     }
+
     setFilteredProducts(currentProducts);
   }, [products, productSelection.searchTerm]);
 

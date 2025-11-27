@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useReservation } from '@/hooks/useReservation';
 import useProducts from '@/hooks/useProducts';
 
@@ -17,10 +17,18 @@ const ReservationsPage = () => {
   const [sortBy, setSortBy] = useState('Date (Newest First)');
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [currentUserId, setCurrentUserId] = useState(null);
 
+  // 1. Fetch Data
   useEffect(() => {
     getAllReservations();
     getAllProducts();
+    
+    // Get logged-in user ID to filter products
+    const storedUserId = localStorage.getItem('userid');
+    if (storedUserId) {
+      setCurrentUserId(Number(storedUserId));
+    }
   }, [getAllReservations, getAllProducts]);
 
   const formatDateTime = (isoString) => {
@@ -45,6 +53,14 @@ const ReservationsPage = () => {
     return fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
   };
 
+  // 2. Filter Products based on User ID
+  // This ensures the table only interacts with products belonging to this user
+  const userProducts = useMemo(() => {
+    if (!currentUserId || !products) return products;
+    return products.filter(product => product.userid === currentUserId);
+  }, [products, currentUserId]);
+
+  // 3. Filter and Sort Reservations
   const filteredAndSortedReservations = useCallback(() => {
     let currentReservations = [...reservations];
 
@@ -150,7 +166,8 @@ const ReservationsPage = () => {
           totalPages={Math.ceil(displayedReservations.length / rowsPerPage)}
           formatDateTime={formatDateTime}
           getCustomerInitials={getCustomerInitials}
-          products={products}
+          // Pass the filtered products (matching userid) instead of all products
+          products={userProducts}
         />
       </div>
     </div>
