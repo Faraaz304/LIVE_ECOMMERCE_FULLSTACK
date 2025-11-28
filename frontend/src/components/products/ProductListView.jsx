@@ -5,9 +5,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Edit2, Trash2 } from 'lucide-react';
-import {
-  Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationNext
-} from '@/components/ui/pagination';
 
 const ProductListView = ({
   products,
@@ -113,10 +110,7 @@ const ProductListView = ({
         </div>
       </div>
       
-      {/* Pagination UI remains the same... */}
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-        {/* ... (Existing pagination code) ... */}
-      </div>
+      
     </>
   );
 };

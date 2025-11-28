@@ -121,7 +121,7 @@ const EditProductPage = () => {
       const result = await updateProduct(routeProductId, productPayload, imageFile);
       if (result && result.success) {
         setSubmitSuccess(true);
-        setTimeout(() => router.push('/seller/products'), 1500);
+        setTimeout(() => router.push('/seller/products'), 0);
       } else {
         setSubmitError(result?.error || 'Failed to update product. Please try again.');
       }
@@ -145,7 +145,7 @@ const EditProductPage = () => {
       const result = await deleteProduct(routeProductId);
       if (result && result.success) {
         alert(`Product "${formData.name}" deleted successfully!`);
-        setTimeout(() => router.push('/seller/products'), 500);
+        setTimeout(() => router.push('/seller/products'), 0);
       } else {
         setSubmitError(result?.error || 'Failed to delete product. Please try again.');
       }

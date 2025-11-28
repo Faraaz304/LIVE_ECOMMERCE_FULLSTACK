@@ -85,7 +85,7 @@ const AddProductPage = () => {
       const result = await createProduct(productPayload, imageFile);
       if (result && result.success) {
         setSuccess(true);
-        setTimeout(() => router.push('/seller/products'), 1500);
+        setTimeout(() => router.push('/seller/products'), 0);
       } else {
         alert(`Failed to add product: ${createError || result?.error || 'Unknown error'}`);
       }
