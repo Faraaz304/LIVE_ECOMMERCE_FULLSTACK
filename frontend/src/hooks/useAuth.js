@@ -131,7 +131,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_API_URL || 'http://localhost:8084';
 
@@ -140,10 +140,10 @@ export const useAuth = () => {
   const [submitError, setSubmitError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
-  const clearMessages = () => {
+  const clearMessages = useCallback(() => {
     setSubmitError(null);
     setSuccessMessage(null);
-  };
+  }, []);
 
   // --------------------------------------------------
   // SAVE refresh + access tokens from backend
@@ -200,7 +200,10 @@ export const useAuth = () => {
       const result = text ? JSON.parse(text) : {};
 
       if (!response.ok) {
-        throw new Error(result?.error || "Authentication failed.");
+        // Backend returns error in 'error' field
+        const errorMessage = result?.error || "Authentication failed.";
+        console.error(`${endpoint} failed:`, errorMessage);
+        throw new Error(errorMessage);
       }
 
       // Save tokens (access + refresh)
@@ -209,6 +212,7 @@ export const useAuth = () => {
       setSuccessMessage(endpoint === "login" ? "Login successful!" : "Registration successful!");
       return result;
     } catch (err) {
+      console.error(`Error in ${endpoint}:`, err);
       setSubmitError(err.message);
       return null;
     } finally {

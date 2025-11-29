@@ -66,16 +66,21 @@ public class AuthServiceImpl implements AuthService {
     // ✅ LOGIN USER
     @Override
     public AuthResponse login(LoginRequest request) {
-        // Authenticate using Spring Security
-        authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.getEmail(),
-                        request.getPassword()
-                )
-        );
-
+        // First check if user exists
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new RuntimeException("User not registered. Please register first"));
+
+        // Try to authenticate - if password is wrong, this will throw BadCredentialsException
+        try {
+            authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            request.getEmail(),
+                            request.getPassword()
+                    )
+            );
+        } catch (org.springframework.security.authentication.BadCredentialsException e) {
+            throw new RuntimeException("Wrong email or password");
+        }
 
         UserDetails userDetails = userDetailsService.loadUserByUsername(user.getEmail());
         String token = jwtService.generateToken(userDetails);

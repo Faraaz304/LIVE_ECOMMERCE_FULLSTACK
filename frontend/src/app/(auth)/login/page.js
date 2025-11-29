@@ -14,9 +14,11 @@ const LoginPage = () => {
 
   const [formData, setFormData] = useState({ email: '', password: '' });
 
+  // Clear messages only on initial mount
   useEffect(() => {
     clearMessages();
-  }, [clearMessages, redirectPath]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleInputChange = (e) => {
     setFormData(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -28,7 +30,8 @@ const LoginPage = () => {
 
     const result = await login(formData.email, formData.password);
 
-    if (result) {
+    // Only proceed if login was successful
+    if (result && result.token) {
       setFormData({ email: '', password: '' });
 
       setTimeout(() => {
@@ -40,6 +43,7 @@ const LoginPage = () => {
         else router.push('/');
       }, 0);
     }
+    // If result is null or doesn't have a token, the error will be displayed via submitError
   };
 
   return (
