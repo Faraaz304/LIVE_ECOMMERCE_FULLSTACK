@@ -1,237 +1,268 @@
+
 'use client';
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import { SessionProvider, useSession, signIn } from 'next-auth/react'; // Import Auth
 import { 
-  Calendar, 
-  Users, 
-  Clock, 
-  TrendingUp, 
-  MoreHorizontal, 
-  Video, 
-  Eye, 
-  ShoppingBag,
-  Radio,
-  Plus
+  Calendar, Users, Clock, TrendingUp, MoreHorizontal, Video, Eye, ShoppingBag, Radio, Plus, 
+  X, Copy, Check, Loader2, AlertCircle 
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationPrevious,
-  PaginationNext,
-  PaginationLink,
-} from '@/components/ui/pagination';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"; 
-
+import { Pagination, PaginationContent, PaginationItem, PaginationPrevious, PaginationNext, PaginationLink } from '@/components/ui/pagination';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"; 
 import { cn } from '@/lib/utils';
 
-// --- Dummy Data (Kept the same) ---
-const dummyStats = {
-  totalStreams: 24,
-  totalWatchHours: 156,
-  averageViewers: 87,
-  reservationsGenerated: 342,
-  streamTrend: 12,
-  watchHoursTrend: 8,
-  viewersTrend: 15,
-  reservationsTrend: 23,
+// --- 1. INTERNAL COMPONENTS (Modals) ---
+
+// Modal to ask for Stream Title
+const CreateStreamModal = ({ isOpen, onClose, onConfirm, isLoading }) => {
+  const [title, setTitle] = useState('');
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="w-full max-w-md bg-card border border-border rounded-xl shadow-2xl p-6 space-y-4">
+        <div className="flex justify-between items-center">
+          <h3 className="text-xl font-semibold text-foreground">Create New Stream</h3>
+          <button onClick={onClose} className="text-muted-foreground hover:text-foreground"><X size={20}/></button>
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Stream Title</label>
+          <input 
+            type="text" 
+            placeholder="e.g., Summer Sale Launch"
+            className="w-full px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">This will create a scheduled event on your YouTube channel.</p>
+        </div>
+        <div className="flex justify-end gap-3 pt-2">
+          <Button variant="outline" onClick={onClose} disabled={isLoading}>Cancel</Button>
+          <Button onClick={() => onConfirm(title)} disabled={!title || isLoading} className="bg-primary text-primary-foreground">
+            {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Creating...</> : 'Create Stream'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 };
 
-const dummyStreams = [
-  { id: 's1', title: 'New iPhone 14 Collection Launch', meta: 'Electronics', thumbnail: 'https://images.unsplash.com/photo-1616348436168-de43ad0db179?auto=format&fit=crop&w=300&q=80', duration: '45:23', date: 'Jan 24, 2025', durationMinutes: 45, totalViews: 245, productsPinned: 5, status: 'completed' },
-  { id: 's2', title: 'Samsung Galaxy S23 Showcase', meta: 'Electronics', thumbnail: 'https://images.unsplash.com/photo-1610945265078-3858a0b5d38b?auto=format&fit=crop&w=300&q=80', duration: '38:15', date: 'Jan 23, 2025', durationMinutes: 38, totalViews: 187, productsPinned: 4, status: 'completed' },
-  { id: 's3', title: 'Exclusive OnePlus 11 Demo', meta: 'Electronics', thumbnail: 'https://images.unsplash.com/photo-1598327774666-978e39a91789?auto=format&fit=crop&w=300&q=80', duration: '52:40', date: 'Jan 22, 2025', durationMinutes: 52, totalViews: 298, productsPinned: 6, status: 'completed' },
-  { id: 's4', title: 'Weekend Special Offers', meta: 'Electronics', thumbnail: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=300&q=80', duration: '30:12', date: 'Jan 21, 2025', durationMinutes: 30, totalViews: 152, productsPinned: 8, status: 'completed' },
-  { id: 's5', title: 'Google Pixel 7 Pro Features', meta: 'Electronics', thumbnail: 'https://images.unsplash.com/photo-1573148195900-7845dcb9b858?auto=format&fit=crop&w=300&q=80', duration: '41:55', date: 'Jan 20, 2025', durationMinutes: 41, totalViews: 223, productsPinned: 5, status: 'completed' },
-];
+// Modal to show Keys after creation
+const StreamSuccessModal = ({ data, onClose }) => {
+  if (!data) return null;
 
-const dummyScheduledStreams = [
-  { id: 'sch1', title: 'Upcoming Laptop Showcase', meta: 'Electronics', thumbnail: 'https://images.unsplash.com/photo-1593642632823-8f78536788c6?auto=format&fit=crop&w=300&q=80', duration: 'Scheduled', date: 'Feb 01, 2025', time: '10:00 AM', status: 'scheduled' },
-  { id: 'sch2', title: 'Winter Collection Preview', meta: 'Fashion', thumbnail: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?auto=format&fit=crop&w=300&q=80', duration: 'Scheduled', date: 'Feb 05, 2025', time: '02:00 PM', status: 'scheduled' },
-  { id: 'live1', title: 'Daily Deals Live!', meta: 'Mixed', thumbnail: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?auto=format&fit=crop&w=300&q=80', duration: 'Live', date: 'Nov 18, 2025', time: '01:00 PM', status: 'live' },
-];
-
-const StatCard = ({ title, value, trend, icon: Icon, colorClass }) => (
-  <Card className="border-border shadow-sm hover:border-primary/50 transition-all duration-200 group bg-card text-card-foreground">
-    <CardContent className="p-5">
-      <div className="flex justify-between items-start">
-        <div className="space-y-1">
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <h3 className="text-2xl font-bold text-foreground tracking-tight">{value}</h3>
-        </div>
-        <div className={cn("p-2 rounded-lg transition-colors opacity-80", colorClass)}>
-          <Icon size={20} />
+  const CopyField = ({ label, value }) => {
+    const [copied, setCopied] = useState(false);
+    const handleCopy = () => {
+      navigator.clipboard.writeText(value);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    };
+    return (
+      <div className="space-y-1">
+        <label className="text-xs font-medium text-muted-foreground uppercase">{label}</label>
+        <div className="flex items-center gap-2">
+          <code className="flex-1 bg-muted p-2 rounded text-xs font-mono break-all border border-border">
+            {value}
+          </code>
+          <Button size="icon" variant="outline" className="h-8 w-8 shrink-0" onClick={handleCopy}>
+            {copied ? <Check size={14} className="text-green-500"/> : <Copy size={14}/>}
+          </Button>
         </div>
       </div>
-      <div className="mt-4 flex items-center text-xs font-medium text-green-600 bg-green-500/10 w-fit px-2 py-1 rounded-full border border-green-500/20">
-        <TrendingUp size={12} className="mr-1" />
-        <span>+{trend}%</span>
-        <span className="text-muted-foreground font-normal ml-1">vs last month</span>
-      </div>
-    </CardContent>
-  </Card>
-);
+    );
+  };
 
-const LiveStreamsDashboard = () => {
-  const router = useRouter();
-  const [activeTab, setActiveTab] = useState('past');
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="w-full max-w-lg bg-card border border-border rounded-xl shadow-2xl p-6 space-y-6">
+        <div className="text-center space-y-2">
+          <div className="w-12 h-12 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto">
+            <Radio size={24} />
+          </div>
+          <h3 className="text-xl font-bold text-foreground">Stream Created!</h3>
+          <p className="text-sm text-muted-foreground">
+            Your event is ready on YouTube. Paste these details into OBS to go live.
+          </p>
+        </div>
+
+        <div className="space-y-4 bg-muted/30 p-4 rounded-lg border border-border">
+          <CopyField label="Stream Key (Private)" value={data.key} />
+          <CopyField label="RTMP Server URL" value={data.url} />
+        </div>
+
+        <div className="bg-yellow-500/10 border border-yellow-500/20 p-3 rounded text-xs text-yellow-600 flex gap-2 items-start">
+          <AlertCircle size={16} className="shrink-0 mt-0.5" />
+          <span>Do not share the Stream Key publicly.</span>
+        </div>
+
+        <Button onClick={onClose} className="w-full bg-primary text-primary-foreground">
+          Done
+        </Button>
+      </div>
+    </div>
+  );
+};
+
+// --- 2. MAIN DASHBOARD CONTENT ---
+const DashboardContent = () => {
+  const { data: session } = useSession(); // This gets the YouTube Login session
+
+  // UI State
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 5;
 
-  const streamsToDisplay = activeTab === 'past' ? dummyStreams : dummyScheduledStreams;
+  // Data State
+  const [streams, setStreams] = useState([]); 
+  const [isLoadingStreams, setIsLoadingStreams] = useState(false);
+
+  // Modal State
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [successData, setSuccessData] = useState(null); // { key, url }
+
+  // API: Fetch Streams
+  const fetchStreams = async () => {
+    if(!session) return;
+    setIsLoadingStreams(true);
+    try {
+      const res = await fetch('/api/youtube/streams');
+      const data = await res.json();
+      if (data.streams) setStreams(data.streams);
+    } catch (error) {
+      console.error("Failed to fetch", error);
+    } finally {
+      setIsLoadingStreams(false);
+    }
+  };
+
+  // Load streams when user logs in
+  useEffect(() => {
+    if(session) fetchStreams();
+  }, [session]);
+
+  // API: Create Stream Logic
+  const handleCreateConfirm = async (title) => {
+    setIsCreating(true);
+    try {
+      const res = await fetch('/api/youtube/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: title,
+          description: "Created via ShopLive Dashboard",
+          scheduledStartTime: new Date(Date.now() + 2 * 60000).toISOString()
+        })
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setIsCreateOpen(false); // Close the input popup
+
+        // ---------------------------------------------------------
+        // THE MAGIC REDIRECT
+        // This opens the specific "Control Room" for this stream
+        // ---------------------------------------------------------
+        const youtubeStudioUrl = `https://studio.youtube.com/video/${data.broadcastId}/livestreaming`;
+        window.open(youtubeStudioUrl, '_blank');
+        
+        // Refresh the list on your dashboard
+        fetchStreams(); 
+        
+        // Optional: Show a small alert
+        alert("Stream created! Redirecting you to YouTube Studio to manage the broadcast.");
+        
+      } else {
+        alert("Error creating stream: " + (data.error || "Unknown error"));
+      }
+    } catch (error) {
+      console.error("Creation error", error);
+      alert("Failed to connect to server");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  // Pagination Logic
+  const streamsToDisplay = streams.length > 0 ? streams : []; 
   const totalStreams = streamsToDisplay.length;
-  const totalPages = Math.ceil(totalStreams / rowsPerPage);
   const currentPaginatedStreams = streamsToDisplay.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
 
   return (
-    <div className="min-h-screen bg-muted/30 p-6 md:p-10">
+    <div className="min-h-screen bg-muted/30 p-6 md:p-10 relative">
+      
+      {/* Modals are placed here */}
+      <CreateStreamModal 
+        isOpen={isCreateOpen} 
+        onClose={() => setIsCreateOpen(false)} 
+        onConfirm={handleCreateConfirm}
+        isLoading={isCreating}
+      />
+      <StreamSuccessModal 
+        data={successData} 
+        onClose={() => setSuccessData(null)} 
+      />
+      
       <div className="max-w-7xl mx-auto space-y-8">
         
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground tracking-tight">Live Dashboard</h1>
-            <p className="text-muted-foreground mt-1">Manage streams, scheduled events, and performance metrics.</p>
+            <p className="text-muted-foreground mt-1">
+              {session ? `Connected as ${session.user.name}` : 'Please connect your YouTube channel to start'}
+            </p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" className="bg-background border-border hover:bg-muted">
-              <Calendar className="mr-2 h-4 w-4" />
-              Calendar
-            </Button>
-            <Button className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-md">
-              <Video className="mr-2 h-4 w-4" />
-              New Stream
-            </Button>
+            {!session ? (
+              <Button onClick={() => signIn('google')} className="bg-red-600 hover:bg-red-700 text-white">
+                <Video className="mr-2 h-4 w-4" />
+                Connect YouTube
+              </Button>
+            ) : (
+              <Button onClick={() => setIsCreateOpen(true)} className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-md">
+                <Video className="mr-2 h-4 w-4" />
+                New Stream
+              </Button>
+            )}
           </div>
         </div>
 
-        {/* Hero / Action Section */}
-        {/* We keep specific colors here as it's a feature banner, but ensure text is readable */}
+        {/* Hero Section */}
         <div className="relative overflow-hidden rounded-2xl bg-foreground text-background shadow-xl">
-          <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-primary/30 blur-3xl rounded-full pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-blue-500/30 blur-3xl rounded-full pointer-events-none"></div>
-          
-          <div className="relative z-10 p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="space-y-4 max-w-2xl text-center md:text-left">
-              <div className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary-foreground/90 backdrop-blur-sm">
-                <Radio className="mr-1.5 h-3 w-3 text-red-500 animate-pulse" />
-                Ready to broadcast
-              </div>
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-background">
-                Engage your audience in real-time
-              </h2>
-              <p className="text-background/70 text-lg leading-relaxed">
-                Start streaming now to showcase products, answer questions, and drive conversions directly from your video feed.
-              </p>
-              <div className="pt-2 flex flex-wrap gap-4 justify-center md:justify-start">
-                <Button size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 border-0 font-semibold">
-                  <Radio className="mr-2 h-4 w-4" />
-                  Go Live Now
-                </Button>
-                <Button size="lg" variant="outline" className="border-background/20 bg-background/5 text-background hover:bg-background/10 hover:text-background backdrop-blur-sm">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Schedule Later
-                </Button>
-              </div>
-            </div>
-            {/* Decorative Element */}
-            <div className="hidden md:block relative w-64 h-48 bg-background/10 rounded-xl border border-background/10 backdrop-blur-md p-4 transform rotate-3 hover:rotate-0 transition-transform duration-500">
-              <div className="flex items-center gap-3 mb-4">
-                 <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center text-white"><Video size={14} /></div>
-                 <div className="h-2 w-24 bg-background/20 rounded"></div>
-              </div>
-              <div className="space-y-2">
-                 <div className="h-24 w-full bg-background/10 rounded-lg animate-pulse"></div>
-                 <div className="flex gap-2">
-                   <div className="h-2 w-1/3 bg-background/20 rounded"></div>
-                   <div className="h-2 w-1/4 bg-background/20 rounded"></div>
-                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-          <StatCard 
-            title="Total Streams" 
-            value={dummyStats.totalStreams} 
-            trend={dummyStats.streamTrend} 
-            icon={Video}
-            colorClass="bg-blue-500/10 text-blue-600"
-          />
-          <StatCard 
-            title="Watch Hours" 
-            value={`${dummyStats.totalWatchHours}h`} 
-            trend={dummyStats.watchHoursTrend} 
-            icon={Clock}
-            colorClass="bg-purple-500/10 text-purple-600"
-          />
-          <StatCard 
-            title="Avg Viewers" 
-            value={dummyStats.averageViewers} 
-            trend={dummyStats.viewersTrend} 
-            icon={Users}
-            colorClass="bg-orange-500/10 text-orange-600"
-          />
-          <StatCard 
-            title="Reservations" 
-            value={dummyStats.reservationsGenerated} 
-            trend={dummyStats.reservationsTrend} 
-            icon={ShoppingBag}
-            colorClass="bg-emerald-500/10 text-emerald-600"
-          />
+           <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-primary/30 blur-3xl rounded-full pointer-events-none"></div>
+           <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-blue-500/30 blur-3xl rounded-full pointer-events-none"></div>
+           <div className="relative z-10 p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8">
+             <div className="space-y-4 max-w-2xl">
+               <div className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary-foreground/90 backdrop-blur-sm">
+                 <Radio className="mr-1.5 h-3 w-3 text-red-500 animate-pulse" />
+                 Ready to broadcast
+               </div>
+               <h2 className="text-3xl font-bold tracking-tight text-background">Engage your audience in real-time</h2>
+               <div className="pt-2">
+                 <Button onClick={() => session ? setIsCreateOpen(true) : signIn('google')} size="lg" className="bg-primary text-primary-foreground hover:bg-primary/90 border-0 font-semibold">
+                   <Radio className="mr-2 h-4 w-4" />
+                   Go Live Now
+                 </Button>
+               </div>
+             </div>
+           </div>
         </div>
 
         {/* Content Area */}
         <div className="space-y-6">
-          {/* Custom Tabs */}
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="bg-card p-1 rounded-lg border border-border inline-flex">
-              <button
-                onClick={() => { setActiveTab('past'); setCurrentPage(1); }}
-                className={cn(
-                  "px-4 py-2 text-sm font-medium rounded-md transition-all",
-                  activeTab === 'past' 
-                    ? "bg-primary text-primary-foreground shadow-sm" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-              >
-                Past Streams
-              </button>
-              <button
-                onClick={() => { setActiveTab('scheduled'); setCurrentPage(1); }}
-                className={cn(
-                  "px-4 py-2 text-sm font-medium rounded-md transition-all",
-                  activeTab === 'scheduled' 
-                    ? "bg-primary text-primary-foreground shadow-sm" 
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                )}
-              >
-                Scheduled
-              </button>
-            </div>
-            
-            <div className="relative w-full sm:w-auto">
-               <input 
-                 placeholder="Search streams..." 
-                 className="w-full sm:w-64 text-sm px-4 py-2.5 border border-input bg-background rounded-lg focus:outline-none focus:ring-2 focus:ring-ring text-foreground placeholder:text-muted-foreground"
-               />
-            </div>
+          <div className="flex justify-between items-center">
+             <h3 className="text-lg font-semibold">Your YouTube Streams</h3>
+             <Button variant="ghost" size="sm" onClick={fetchStreams}>
+                {isLoadingStreams ? <Loader2 className="animate-spin h-4 w-4"/> : "Refresh List"}
+             </Button>
           </div>
 
-          {/* Table */}
           <Card className="border border-border shadow-sm overflow-hidden bg-card text-card-foreground">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
@@ -239,89 +270,60 @@ const LiveStreamsDashboard = () => {
                   <tr className="border-b border-border bg-muted/40">
                     <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Stream Details</th>
                     <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status & Time</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Performance</th>
                     <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {currentPaginatedStreams.length === 0 ? (
+                  {/* Handle Loading State */}
+                  {isLoadingStreams && (
+                    <tr><td colSpan={3} className="p-8 text-center text-muted-foreground">Loading YouTube Data...</td></tr>
+                  )}
+
+                  {/* Handle Empty State */}
+                  {!isLoadingStreams && currentPaginatedStreams.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className="px-6 py-12 text-center">
+                      <td colSpan={3} className="px-6 py-12 text-center">
                         <div className="mx-auto w-12 h-12 bg-muted rounded-full flex items-center justify-center mb-3">
                           <Video className="text-muted-foreground" />
                         </div>
                         <h3 className="text-foreground font-medium">No streams found</h3>
-                        <p className="text-muted-foreground text-sm mt-1">Get started by scheduling a new stream.</p>
+                        <p className="text-muted-foreground text-sm mt-1">
+                          {session ? "Click 'New Stream' to create one." : "Connect your channel to view streams."}
+                        </p>
                       </td>
                     </tr>
                   ) : (
+                    /* Handle Real Data */
                     currentPaginatedStreams.map((stream) => (
                       <tr key={stream.id} className="group hover:bg-muted/30 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-start gap-4">
-                            <div className="relative h-16 w-28 flex-shrink-0 overflow-hidden rounded-lg border border-border shadow-sm group-hover:shadow-md transition-all bg-muted">
-                              <img src={stream.thumbnail} alt={stream.title} className="h-full w-full object-cover" />
-                              {stream.status === 'live' ? (
-                                <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                                  <Badge className="bg-red-500 hover:bg-red-600 border-0 text-[10px] px-2 py-0.5 text-white">LIVE</Badge>
-                                </div>
+                            <div className="relative h-16 w-28 flex-shrink-0 overflow-hidden rounded-lg border border-border shadow-sm bg-muted">
+                              {stream.thumbnail ? (
+                                <img src={stream.thumbnail} alt={stream.title} className="h-full w-full object-cover" />
                               ) : (
-                                <div className="absolute bottom-1 right-1 bg-black/70 text-white text-[9px] font-medium px-1 rounded">
-                                  {stream.duration}
-                                </div>
+                                <div className="h-full w-full flex items-center justify-center text-xs text-muted-foreground">No Img</div>
                               )}
                             </div>
                             <div>
-                              <h4 className="font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors">{stream.title}</h4>
-                              <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                                <Badge variant="outline" className="text-[10px] px-1.5 h-5 font-normal border-border bg-background text-muted-foreground">
-                                  {stream.meta}
-                                </Badge>
-                                <span>• {stream.id}</span>
-                              </div>
+                              <h4 className="font-semibold text-foreground line-clamp-1">{stream.title}</h4>
+                              <span className="text-xs text-muted-foreground">ID: {stream.id}</span>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex flex-col">
-                            <span className="text-sm font-medium text-foreground">{stream.date}</span>
-                            <span className="text-xs text-muted-foreground flex items-center mt-0.5">
-                              <Clock size={12} className="mr-1" />
-                              {stream.status === 'scheduled' ? stream.time : `${stream.durationMinutes} mins`}
-                            </span>
+                            <span className="text-sm font-medium">{new Date(stream.date).toLocaleDateString()}</span>
+                            <Badge variant="outline" className={cn(
+                              "w-fit mt-1 text-[10px]", 
+                              stream.status === 'live' ? "border-red-500 text-red-500" : "text-muted-foreground"
+                            )}>
+                              {stream.status ? stream.status.toUpperCase() : 'UNKNOWN'}
+                            </Badge>
                           </div>
                         </td>
-                        <td className="px-6 py-4">
-                          {stream.status === 'scheduled' ? (
-                            <span className="text-xs text-muted-foreground italic">--</span>
-                          ) : (
-                            <div className="flex items-center gap-4">
-                              <div className="flex items-center gap-1.5" title="Views">
-                                <Eye size={14} className="text-muted-foreground" />
-                                <span className="text-sm font-medium text-foreground">{stream.totalViews}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5" title="Products Pinned">
-                                <ShoppingBag size={14} className="text-muted-foreground" />
-                                <span className="text-sm font-medium text-foreground">{stream.productsPinned}</span>
-                              </div>
-                            </div>
-                          )}
-                        </td>
                         <td className="px-6 py-4 text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                                <MoreHorizontal size={16} />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-40 bg-card border-border">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem className="text-xs cursor-pointer">View Analytics</DropdownMenuItem>
-                              <DropdownMenuItem className="text-xs cursor-pointer">Edit Details</DropdownMenuItem>
-                              <div className="h-px bg-border my-1" />
-                              <DropdownMenuItem className="text-xs text-destructive focus:text-destructive cursor-pointer">Delete Stream</DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                          <Button variant="ghost" size="sm">Manage</Button>
                         </td>
                       </tr>
                     ))
@@ -329,34 +331,6 @@ const LiveStreamsDashboard = () => {
                 </tbody>
               </table>
             </div>
-
-            {/* Footer / Pagination */}
-            {totalStreams > 0 && (
-              <div className="border-t border-border bg-muted/20 px-6 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-                <p className="text-xs text-muted-foreground">
-                  Showing <span className="font-medium text-foreground">{(currentPage - 1) * rowsPerPage + 1}</span> to <span className="font-medium text-foreground">{Math.min(currentPage * rowsPerPage, totalStreams)}</span> of <span className="font-medium text-foreground">{totalStreams}</span> streams
-                </p>
-                <Pagination className="w-auto mx-0">
-                  <PaginationContent>
-                    <PaginationItem>
-                      <PaginationPrevious 
-                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))} 
-                        className={cn("cursor-pointer bg-background hover:bg-muted", currentPage === 1 && "opacity-50 pointer-events-none")}
-                      />
-                    </PaginationItem>
-                    <PaginationItem>
-                      <PaginationLink isActive className="bg-primary text-primary-foreground border-primary">{currentPage}</PaginationLink>
-                    </PaginationItem>
-                    <PaginationItem>
-                      <PaginationNext 
-                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                        className={cn("cursor-pointer bg-background hover:bg-muted", currentPage === totalPages && "opacity-50 pointer-events-none")}
-                      />
-                    </PaginationItem>
-                  </PaginationContent>
-                </Pagination>
-              </div>
-            )}
           </Card>
         </div>
       </div>
@@ -364,4 +338,12 @@ const LiveStreamsDashboard = () => {
   );
 };
 
-export default LiveStreamsDashboard;
+// --- 3. EXPORT WITH PROVIDER ---
+// We wrap the component here so we don't disturb your root layout
+export default function LiveStreamsPage() {
+  return (
+    <SessionProvider>
+      <DashboardContent />
+    </SessionProvider>
+  );
+}
