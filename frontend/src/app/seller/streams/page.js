@@ -120,9 +120,7 @@ const DashboardContent = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground tracking-tight">Live Dashboard</h1>
-            <p className="text-muted-foreground mt-1">
-              {session ? `Connected as ${session.user.name}` : 'Please connect your YouTube channel to start'}
-            </p>
+            
           </div>
           <div className="flex items-center gap-3">
             {!session && (
@@ -253,5 +251,135 @@ export default function LiveStreamsPage() {
 }
 
 
+// 'use client';
 
+// import React, { useState, useEffect } from 'react';
+// import { SessionProvider, useSession, signIn } from 'next-auth/react'; 
+// import { Video, Radio, Loader2, ExternalLink, RefreshCw } from 'lucide-react';
+// import { Button } from '@/components/ui/button';
+// import { Badge } from '@/components/ui/badge';
+// import { Card } from '@/components/ui/card';
+// import { cn } from '@/lib/utils';
 
+// const DashboardContent = () => {
+//   const { data: session } = useSession(); 
+//   const [streams, setStreams] = useState([]); 
+//   const [isLoading, setIsLoading] = useState(false);
+
+//   // --- 1. FETCH STREAMS ---
+//   // This will find the stream automatically once the seller goes live on YouTube
+//   const fetchStreams = async () => {
+//     if(!session) return;
+//     setIsLoading(true);
+//     try {
+//       const res = await fetch('/api/youtube/streams');
+//       const data = await res.json();
+//       if (data.streams) setStreams(data.streams);
+//     } catch (error) {
+//       console.error("Failed to fetch streams:", error);
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     if(session) fetchStreams();
+//   }, [session]);
+
+//   // --- 2. GO LIVE ACTION ---
+//   const handleGoLive = () => {
+//     // This specific URL forces YouTube to open in "Webcam Mode"
+//     // The seller just allows the camera and clicks "Go Live"
+//     window.open("https://studio.youtube.com/livestreaming/webcam", "YoutubeWebcam", "width=1000,height=900");
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-muted/30 p-6 md:p-10">
+//       <div className="max-w-7xl mx-auto space-y-8">
+        
+//         {/* Header */}
+//         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+//           <div>
+//             <h1 className="text-3xl font-bold tracking-tight">Live Dashboard</h1>
+//             <p className="text-muted-foreground mt-1">
+//               {session ? `Connected: ${session.user.name}` : 'Connect YouTube to start'}
+//             </p>
+//           </div>
+//           <div className="flex gap-3">
+//             {!session ? (
+//               <Button onClick={() => signIn('google')} className="bg-red-600 text-white">
+//                 <Video className="mr-2 h-4 w-4" /> Connect YouTube
+//               </Button>
+//             ) : (
+//               <Button onClick={handleGoLive} className="bg-primary text-white shadow-md">
+//                 <Radio className="mr-2 h-4 w-4" /> Go Live (Webcam)
+//               </Button>
+//             )}
+//           </div>
+//         </div>
+
+//         {/* Stream List */}
+//         <Card className="border shadow-sm p-0 overflow-hidden">
+//           <div className="p-4 border-b bg-muted/20 flex justify-between items-center">
+//             <h3 className="font-semibold">Your Broadcasts</h3>
+//             <Button variant="outline" size="sm" onClick={fetchStreams} disabled={isLoading}>
+//               {isLoading ? <Loader2 className="animate-spin h-4 w-4"/> : <RefreshCw className="h-4 w-4 mr-2"/>}
+//               Refresh List
+//             </Button>
+//           </div>
+
+//           <div className="overflow-x-auto">
+//             <table className="w-full text-left">
+//               <thead className="bg-muted/50 text-xs uppercase text-muted-foreground">
+//                 <tr>
+//                   <th className="px-6 py-3">Stream Details</th>
+//                   <th className="px-6 py-3">Status</th>
+//                   <th className="px-6 py-3 text-right">Actions</th>
+//                 </tr>
+//               </thead>
+//               <tbody className="divide-y">
+//                 {streams.length === 0 && !isLoading ? (
+//                   <tr>
+//                     <td colSpan={3} className="p-10 text-center text-muted-foreground">
+//                       No streams found. Click <b>"Go Live"</b> to start a webcam stream on YouTube.
+//                       <br/>Then come back here and click Refresh.
+//                     </td>
+//                   </tr>
+//                 ) : (
+//                   streams.map((stream) => (
+//                     <tr key={stream.id} className="hover:bg-muted/10">
+//                       <td className="px-6 py-4">
+//                         <div className="flex items-center gap-4">
+//                           <img src={stream.thumbnail || "https://placehold.co/120x68?text=No+Img"} className="w-24 h-16 object-cover rounded bg-muted" />
+//                           <div>
+//                             <div className="font-medium">{stream.title}</div>
+//                             <div className="text-xs text-muted-foreground">{new Date(stream.date).toLocaleDateString()}</div>
+//                           </div>
+//                         </div>
+//                       </td>
+//                       <td className="px-6 py-4">
+//                          <Badge variant={stream.status === 'live' ? "destructive" : "secondary"}>
+//                            {stream.status.toUpperCase()}
+//                          </Badge>
+//                       </td>
+//                       <td className="px-6 py-4 text-right">
+//                         <Button size="sm" variant="ghost" onClick={() => window.open(`https://studio.youtube.com/video/${stream.id}/livestreaming`, '_blank')}>
+//                            Manage <ExternalLink className="ml-2 h-3 w-3"/>
+//                         </Button>
+//                       </td>
+//                     </tr>
+//                   ))
+//                 )}
+//               </tbody>
+//             </table>
+//           </div>
+//         </Card>
+
+//       </div>
+//     </div>
+//   );
+// };
+
+// export default function LiveStreamsPage() {
+//   return <SessionProvider><DashboardContent /></SessionProvider>;
+// }
