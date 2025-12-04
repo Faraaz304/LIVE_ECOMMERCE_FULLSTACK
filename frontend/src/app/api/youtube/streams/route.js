@@ -1,56 +1,141 @@
-
-
 import { google } from "googleapis";
-import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
-// import { handler } from "../../auth/[...nextauth]/route"; // Import auth options
-import { authOptions } from "@/lib/auth";
 
-// const handler = async (req, res) => {
-//   return await getServerSession(req, res, authOptions);
-// };
+// --- HELPER: Setup Auth Client ---
+const getYoutubeClient = () => {
+  const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+  const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+  const REFRESH_TOKEN = process.env.GOOGLE_REFRESH_TOKEN;
 
-export async function GET() {
-  const session = await getServerSession(handler);
-
-  if (!session || !session.accessToken) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!CLIENT_ID || !CLIENT_SECRET || !REFRESH_TOKEN) {
+    throw new Error("Missing Google API Credentials in .env");
   }
 
-  const youtube = google.youtube({
-    version: "v3",
-    auth: process.env.GOOGLE_CLIENT_KEY, // Not needed here, we use oauth below
-  });
+  const oauth2Client = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET);
+  oauth2Client.setCredentials({ refresh_token: REFRESH_TOKEN });
 
-  const oauth2Client = new google.auth.OAuth2();
-  oauth2Client.setCredentials({ access_token: session.accessToken });
+  return google.youtube({ version: "v3", auth: oauth2Client });
+};
 
+// ==================================================================
+// 1. GET METHOD - List all streams (Active, Upcoming, Completed)
+// ==================================================================
+export async function GET() {
   try {
-    // 1. Fetch Live Broadcasts (Upcoming, Live, and Completed)
-    // Note: 'completed' broadcasts only stay in the API for a short time unless they are saved as videos.
-    // Usually, you might need to query the 'search' endpoint for past videos.
+    const youtube = getYoutubeClient();
+
+    // Fetch everything associated with the channel (mine: true)
     const response = await youtube.liveBroadcasts.list({
-      auth: oauth2Client,
-      part: ["snippet", "status", "contentDetails"],
-      broadcastStatus: "all", // Fetch active, upcoming, and completed
+      part: "snippet,status",
+      broadcastStatus: "all",
+      broadcastType: "all",
+      mine: true,
       maxResults: 20,
     });
 
-    const streams = response.data.items.map((item) => ({
+    const items = response.data.items || [];
+
+    // Format for Frontend
+    const streams = items.map((item) => ({
       id: item.id,
       title: item.snippet.title,
-      meta: "YouTube Live", // Or derive from description/tags
-      thumbnail: item.snippet.thumbnails.medium.url,
-      // Calculate duration or use placeholders
-      duration: item.status.lifeCycleStatus === 'live' ? 'Live' : 'Recorded',
-      date: new Date(item.snippet.scheduledStartTime || item.snippet.actualStartTime).toLocaleDateString(),
-      status: item.status.lifeCycleStatus, // 'ready', 'testing', 'live', 'complete'
-      totalViews: 0, // Need a separate call to 'videos.list' to get view counts for completed streams
+      thumbnail: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || "",
+      status: item.status.lifeCycleStatus, // 'ready', 'live', 'complete', 'testing'
+      date: item.snippet.scheduledStartTime || item.snippet.actualStartTime || item.snippet.publishedAt,
     }));
 
     return NextResponse.json({ streams });
+
   } catch (error) {
-    console.error("YouTube API Error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("GET Error:", error.message);
+    return NextResponse.json({ streams: [], error: error.message }, { status: 500 });
+  }
+}
+
+// ==================================================================
+// 2. POST METHOD - Create Broadcast + Stream Key + Bind
+// ==================================================================
+export async function POST(req) {
+  try {
+    const youtube = getYoutubeClient();
+    
+    // Parse Input
+    const body = await req.json();
+    const streamTitle = body.title || "Untitled NextJS Stream";
+
+    console.log(`Creating Stream: "${streamTitle}"...`);
+
+    // --- Step A: Create Broadcast ---
+    const broadcastResponse = await youtube.liveBroadcasts.insert({
+      part: "snippet,status,contentDetails",
+      resource: {
+        snippet: {
+          title: streamTitle,
+          description: "Created via API",
+          scheduledStartTime: new Date().toISOString(),
+        },
+        status: {
+          privacyStatus: "unlisted", // Change to 'public' if needed
+          selfDeclaredMadeForKids: false,
+        },
+        contentDetails: {
+          enableAutoStart: true,
+          enableAutoStop: true,
+        },
+      },
+    });
+
+    const broadcastId = broadcastResponse.data.id;
+    console.log("✅ Broadcast ID:", broadcastId);
+
+    // --- Step B: Create Stream Key ---
+    const streamResponse = await youtube.liveStreams.insert({
+      part: "snippet,cdn",
+      resource: {
+        snippet: {
+          title: `${streamTitle} - Key`,
+        },
+        cdn: {
+          format: "1080p",
+          ingestionType: "rtmp",
+          resolution: "1080p", 
+          frameRate: "30fps"
+        },
+      },
+    });
+
+    const streamId = streamResponse.data.id;
+    console.log("✅ Stream ID:", streamId);
+
+    // --- Step C: Bind Them Together ---
+    await youtube.liveBroadcasts.bind({
+      part: "id,contentDetails",
+      id: broadcastId,
+      streamId: streamId,
+    });
+
+    // --- Success Response ---
+    const streamName = streamResponse.data.cdn.ingestionInfo.streamName;
+    const ingestionAddress = streamResponse.data.cdn.ingestionInfo.ingestionAddress;
+
+    return NextResponse.json({
+      success: true,
+      broadcastId: broadcastId,
+      youtubeLink: `https://youtu.be/${broadcastId}`,
+      streamSettings: {
+        serverUrl: ingestionAddress,
+        streamKey: streamName,
+      },
+    });
+
+  } catch (error) {
+    console.error("POST Error:", error.message);
+    return NextResponse.json(
+      { 
+        error: error.message, 
+        details: error.response?.data?.error?.errors || error.response?.data 
+      }, 
+      { status: 500 }
+    );
   }
 }
