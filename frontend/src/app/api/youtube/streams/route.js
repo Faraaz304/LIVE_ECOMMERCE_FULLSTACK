@@ -26,7 +26,7 @@ export async function GET() {
 
     // Fetch everything associated with the channel (mine: true)
     const response = await youtube.liveBroadcasts.list({
-      part: "snippet,status",
+      part: "id,snippet,status",  // ← Added "id" here to support 'mine'
       broadcastStatus: "all",
       broadcastType: "all",
       mine: true,
@@ -139,3 +139,4 @@ export async function POST(req) {
     );
   }
 }
+

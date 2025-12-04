@@ -32,6 +32,7 @@ const CreateStreamModal = ({ isOpen, onClose, onConfirm, isLoading }) => {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
+          <p className="text-xs text-muted-foreground">This will create a scheduled event on your YouTube channel.</p>
         </div>
         <div className="flex justify-end gap-3 pt-2">
           <Button variant="outline" onClick={onClose} disabled={isLoading}>Cancel</Button>
@@ -59,11 +60,8 @@ const DashboardContent = () => {
     if(!session) return;
     setIsLoadingStreams(true);
     try {
-      // Calls GET method on /api/youtube/streams
       const res = await fetch('/api/youtube/streams'); 
-      
       if (!res.ok) throw new Error(`Server error: ${res.status}`);
-
       const data = await res.json();
       if (data.streams) {
         setStreams(data.streams);
@@ -83,9 +81,8 @@ const DashboardContent = () => {
   const handleCreateConfirm = async (title) => {
     setIsCreating(true);
     try {
-      // Calls POST method on /api/youtube/streams
       const res = await fetch('/api/youtube/streams', { 
-        method: 'POST', // <--- This distinguishes it from the GET request
+        method: 'POST', 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: title })
       });
@@ -94,14 +91,9 @@ const DashboardContent = () => {
 
       if (data.success) {
         setIsCreateOpen(false); 
-        
-        // Open YouTube Studio directly to the new broadcast
         const youtubeStudioUrl = `https://studio.youtube.com/video/${data.broadcastId}/livestreaming`;
         window.open(youtubeStudioUrl, '_blank');
-        
-        // Refresh the list immediately
         fetchStreams(); 
-        
       } else {
         alert("Error creating stream: " + (data.error || "Unknown error"));
       }
@@ -127,25 +119,48 @@ const DashboardContent = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Live Dashboard</h1>
+            <h1 className="text-3xl font-bold text-foreground tracking-tight">Live Dashboard</h1>
             <p className="text-muted-foreground mt-1">
-              {session ? `Connected as ${session.user.name}` : 'Connect your channel to start'}
+              {session ? `Connected as ${session.user.name}` : 'Please connect your YouTube channel to start'}
             </p>
           </div>
           <div className="flex items-center gap-3">
-            {!session ? (
+            {!session && (
               <Button onClick={() => signIn('google')} className="bg-red-600 hover:bg-red-700 text-white">
-                <Video className="mr-2 h-4 w-4" /> Connect YouTube
-              </Button>
-            ) : (
-              <Button onClick={() => setIsCreateOpen(true)} className="bg-primary text-primary-foreground">
-                <Video className="mr-2 h-4 w-4" /> New Stream
+                <Video className="mr-2 h-4 w-4" />
+                Connect YouTube
               </Button>
             )}
+            {/* Note: "New Stream" button removed from here as requested */}
           </div>
         </div>
 
-        {/* Stream List */}
+        {/* Hero Section (The "Good" UI) */}
+        <div className="relative overflow-hidden rounded-2xl bg-foreground text-background shadow-xl">
+           <div className="absolute top-0 right-0 -mr-20 -mt-20 w-96 h-96 bg-primary/30 blur-3xl rounded-full pointer-events-none"></div>
+           <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-blue-500/30 blur-3xl rounded-full pointer-events-none"></div>
+           <div className="relative z-10 p-8 md:p-10 flex flex-col md:flex-row items-center justify-between gap-8">
+             <div className="space-y-4 max-w-2xl">
+               <div className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-medium text-primary-foreground/90 backdrop-blur-sm">
+                 <Radio className="mr-1.5 h-3 w-3 text-red-500 animate-pulse" />
+                 Ready to broadcast
+               </div>
+               <h2 className="text-3xl font-bold tracking-tight text-background">Engage your audience in real-time</h2>
+               <div className="pt-2">
+                 <Button 
+                    onClick={() => session ? setIsCreateOpen(true) : signIn('google')} 
+                    size="lg" 
+                    className="bg-primary text-primary-foreground hover:bg-primary/90 border-0 font-semibold"
+                 >
+                   <Radio className="mr-2 h-4 w-4" />
+                   Go Live Now
+                 </Button>
+               </div>
+             </div>
+           </div>
+        </div>
+
+        {/* Stream List Table */}
         <div className="space-y-6">
           <div className="flex justify-between items-center">
              <h3 className="text-lg font-semibold">Your YouTube Streams</h3>
@@ -154,33 +169,47 @@ const DashboardContent = () => {
              </Button>
           </div>
 
-          <Card className="border border-border shadow-sm overflow-hidden bg-card">
+          <Card className="border border-border shadow-sm overflow-hidden bg-card text-card-foreground">
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-border bg-muted/40">
-                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase">Details</th>
-                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase">Status</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Stream Details</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status & Time</th>
+                    <th className="px-6 py-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
+                  {/* Handle Loading State */}
                   {isLoadingStreams && (
-                    <tr><td colSpan={2} className="p-8 text-center text-muted-foreground">Loading Data...</td></tr>
+                    <tr><td colSpan={3} className="p-8 text-center text-muted-foreground">Loading YouTube Data...</td></tr>
                   )}
 
+                  {/* Handle Empty State */}
                   {!isLoadingStreams && streams.length === 0 ? (
                     <tr>
-                      <td colSpan={2} className="px-6 py-12 text-center text-muted-foreground">
-                        No streams found. Click "New Stream" to start.
+                      <td colSpan={3} className="px-6 py-12 text-center">
+                        <div className="mx-auto w-12 h-12 bg-muted rounded-full flex items-center justify-center mb-3">
+                          <Video className="text-muted-foreground" />
+                        </div>
+                        <h3 className="text-foreground font-medium">No streams found</h3>
+                        <p className="text-muted-foreground text-sm mt-1">
+                          {session ? "Click 'Go Live Now' to create one." : "Connect your channel to view streams."}
+                        </p>
                       </td>
                     </tr>
                   ) : (
+                    /* Handle Real Data */
                     streams.map((stream) => (
-                      <tr key={stream.id} className="hover:bg-muted/30">
+                      <tr key={stream.id} className="group hover:bg-muted/30 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-start gap-4">
-                            <div className="h-16 w-28 rounded-lg overflow-hidden bg-muted relative">
-                              {stream.thumbnail && <img src={stream.thumbnail} alt="" className="h-full w-full object-cover" />}
+                            <div className="relative h-16 w-28 flex-shrink-0 overflow-hidden rounded-lg border border-border shadow-sm bg-muted">
+                              {stream.thumbnail ? (
+                                <img src={stream.thumbnail} alt={stream.title} className="h-full w-full object-cover" />
+                              ) : (
+                                <div className="h-full w-full flex items-center justify-center text-xs text-muted-foreground">No Img</div>
+                              )}
                             </div>
                             <div>
                               <h4 className="font-semibold text-foreground line-clamp-1">{stream.title}</h4>
@@ -189,12 +218,18 @@ const DashboardContent = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4">
-                          <Badge variant="outline" className={cn(
-                            "text-[10px]", 
-                            stream.status === 'live' ? "border-red-500 text-red-500" : "text-muted-foreground"
-                          )}>
-                            {stream.status ? stream.status.toUpperCase() : 'UNKNOWN'}
-                          </Badge>
+                          <div className="flex flex-col">
+                            <span className="text-sm font-medium">{new Date(stream.date).toLocaleDateString()}</span>
+                            <Badge variant="outline" className={cn(
+                              "w-fit mt-1 text-[10px]", 
+                              stream.status === 'live' ? "border-red-500 text-red-500" : "text-muted-foreground"
+                            )}>
+                              {stream.status ? stream.status.toUpperCase() : 'UNKNOWN'}
+                            </Badge>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <Button variant="ghost" size="sm">Manage</Button>
                         </td>
                       </tr>
                     ))
@@ -216,3 +251,7 @@ export default function LiveStreamsPage() {
     </SessionProvider>
   );
 }
+
+
+
+
