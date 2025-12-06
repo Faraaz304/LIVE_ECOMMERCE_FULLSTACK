@@ -122,15 +122,7 @@ const DashboardContent = () => {
             <h1 className="text-3xl font-bold text-foreground tracking-tight">Live Dashboard</h1>
             
           </div>
-          <div className="flex items-center gap-3">
-            {!session && (
-              <Button onClick={() => signIn('google')} className="bg-red-600 hover:bg-red-700 text-white">
-                <Video className="mr-2 h-4 w-4" />
-                Connect YouTube
-              </Button>
-            )}
-            {/* Note: "New Stream" button removed from here as requested */}
-          </div>
+          
         </div>
 
         {/* Hero Section (The "Good" UI) */}
