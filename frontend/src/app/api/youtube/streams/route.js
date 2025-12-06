@@ -17,6 +17,7 @@ const getYoutubeClient = () => {
   return google.youtube({ version: "v3", auth: oauth2Client });
 };
 
+
 // ==================================================================
 // 1. GET METHOD - List all streams (Active, Upcoming, Completed)
 // ==================================================================
@@ -26,9 +27,9 @@ export async function GET() {
 
     // Fetch everything associated with the channel (mine: true)
     const response = await youtube.liveBroadcasts.list({
-      part: "id,snippet,status",  // ← Added "id" here to support 'mine'
-      broadcastStatus: "all",
-      broadcastType: "all",
+      part: "snippet,status", // <--- Removed "id" (it comes back automatically)
+      // broadcastStatus: "all",
+      // broadcastType: "all", // <--- REMOVED THIS (Causes the 500 error)
       mine: true,
       maxResults: 20,
     });
@@ -37,17 +38,18 @@ export async function GET() {
 
     // Format for Frontend
     const streams = items.map((item) => ({
-      id: item.id,
+      id: item.id, // <--- This will still work!
       title: item.snippet.title,
       thumbnail: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || "",
-      status: item.status.lifeCycleStatus, // 'ready', 'live', 'complete', 'testing'
+      status: item.status.lifeCycleStatus, 
       date: item.snippet.scheduledStartTime || item.snippet.actualStartTime || item.snippet.publishedAt,
     }));
 
     return NextResponse.json({ streams });
 
   } catch (error) {
-    console.error("GET Error:", error.message);
+    // Log the FULL error object to see the real cause in your terminal
+    console.error("GET Error Details:", error.response?.data || error.message);
     return NextResponse.json({ streams: [], error: error.message }, { status: 500 });
   }
 }
