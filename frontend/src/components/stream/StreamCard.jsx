@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation'; // <--- 1. Import useRouter
 import { 
   Calendar, Clock, Eye, ThumbsUp, 
   ImageOff, ExternalLink 
@@ -11,6 +12,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 const StreamCard = ({ stream }) => {
+  const router = useRouter(); // <--- 2. Initialize Router
+
   const isLive = stream.status === 'live';
   const isComplete = stream.status === 'complete';
 
@@ -19,16 +22,14 @@ const StreamCard = ({ stream }) => {
   const dateStr = dateObj.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
   const timeStr = dateObj.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
 
-  // Handle Card Click (Go to Watch Link)
+  // --- 3. HANDLE CLICK: Redirect to Internal Detail Page ---
   const handleCardClick = () => {
-    if (stream.youtubeLink) {
-      window.open(stream.youtubeLink, '_blank');
-    }
+    router.push(`/stream/${stream.id}`);
   };
 
-  // Handle Manage Click (Go to Studio)
+  // Handle Manage Click (Go to Studio) - Stops propagation so card click doesn't fire
   const handleManageClick = (e) => {
-    e.stopPropagation(); // Prevent card click
+    e.stopPropagation(); 
     window.open(`https://studio.youtube.com/video/${stream.id}/livestreaming`, '_blank');
   };
 
