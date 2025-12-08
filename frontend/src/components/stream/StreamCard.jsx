@@ -1,10 +1,10 @@
 'use client';
 
 import React from 'react';
-import { useRouter } from 'next/navigation'; // <--- 1. Import useRouter
+import { useRouter } from 'next/navigation';
 import { 
   Calendar, Clock, Eye, ThumbsUp, 
-  ImageOff, ExternalLink 
+  ImageOff, ExternalLink, Play // <--- Added Play icon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +12,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
 const StreamCard = ({ stream }) => {
-  const router = useRouter(); // <--- 2. Initialize Router
+  const router = useRouter();
 
   const isLive = stream.status === 'live';
   const isComplete = stream.status === 'complete';
@@ -22,15 +22,23 @@ const StreamCard = ({ stream }) => {
   const dateStr = dateObj.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
   const timeStr = dateObj.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
 
-  // --- 3. HANDLE CLICK: Redirect to Internal Detail Page ---
+  // Handle Card Click: Redirect to Internal Detail Page
   const handleCardClick = () => {
     router.push(`/stream/${stream.id}`);
   };
 
-  // Handle Manage Click (Go to Studio) - Stops propagation so card click doesn't fire
-  const handleManageClick = (e) => {
-    e.stopPropagation(); 
-    window.open(`https://studio.youtube.com/video/${stream.id}/livestreaming`, '_blank');
+  // --- UPDATED: Handle Button Click based on Status ---
+  const handleActionClick = (e) => {
+    e.stopPropagation(); // Prevent card click
+
+    if (isComplete) {
+      // If completed: Redirect to Watch on YouTube
+      const watchLink = stream.youtubeLink || `https://www.youtube.com/watch?v=${stream.id}`;
+      window.open(watchLink, '_blank');
+    } else {
+      // If upcoming/live: Redirect to YouTube Studio to Manage
+      window.open(`https://studio.youtube.com/video/${stream.id}/livestreaming`, '_blank');
+    }
   };
 
   return (
@@ -95,14 +103,15 @@ const StreamCard = ({ stream }) => {
             </span>
           </div>
 
+          {/* --- UPDATED BUTTON --- */}
           <Button 
             variant="ghost" 
             size="icon" 
             className="h-6 w-6 hover:text-foreground"
-            onClick={handleManageClick}
-            title="Manage in Studio"
+            onClick={handleActionClick}
+            title={isComplete ? "Watch on YouTube" : "Manage in Studio"} 
           >
-            <ExternalLink size={14} />
+            {isComplete ? <Play size={14} /> : <ExternalLink size={14} />}
           </Button>
         </div>
       </CardContent>
