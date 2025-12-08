@@ -26,7 +26,7 @@ const StreamCard = ({ stream, mode = 'seller' }) => { // <--- Added mode prop
   // Handle Card Click: Redirect to Internal Detail Page
   const handleCardClick = () => {
     // Both sellers and viewers can go to the detail page
-    router.push(`/stream/${stream.id}`);
+    router.push(`/seller/streams/${stream.id}`);
   };
 
   // --- HANDLE ACTION BUTTON ---

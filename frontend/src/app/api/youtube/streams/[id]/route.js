@@ -18,7 +18,12 @@ const getYoutubeClient = () => {
 };
 
 export async function GET(req, { params }) {
-  const { id } = params;
+  // ---------------------------------------------------------
+  // 👇 THIS IS THE FIX FOR NEXT.JS 15
+  // You must await params before using it
+  // ---------------------------------------------------------
+  const resolvedParams = await params;
+  const { id } = resolvedParams;
 
   if (!id) {
     return NextResponse.json({ error: "Missing Stream ID" }, { status: 400 });
@@ -41,10 +46,10 @@ export async function GET(req, { params }) {
 
     // --- Format Data ---
     const snippet = item.snippet;
-    const stats = item.statistics;
+    const stats = item.statistics || {};
     const live = item.liveStreamingDetails || {};
     
-    // Determine status (Note: 'liveStreamingDetails' presence helps confirm if it was a stream)
+    // Determine status
     let streamStatus = 'completed';
     if (snippet.liveBroadcastContent === 'live') streamStatus = 'live';
     if (snippet.liveBroadcastContent === 'upcoming') streamStatus = 'upcoming';
@@ -69,12 +74,11 @@ export async function GET(req, { params }) {
         viewCount: stats.viewCount || "0",
         likeCount: stats.likeCount || "0",
         commentCount: stats.commentCount || "0",
-        concurrentViewers: live.concurrentViewers || "0", // Only available if currently live
+        concurrentViewers: live.concurrentViewers || "0", 
       },
 
-      // Links
       videoLink: `https://www.youtube.com/watch?v=${item.id}`,
-      embedHtml: item.player?.embedHtml || null // YouTube sometimes returns the embed code
+      embedHtml: item.player?.embedHtml || null 
     };
 
     return NextResponse.json({ success: true, stream: streamData });
@@ -84,13 +88,3 @@ export async function GET(req, { params }) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
-
-
-// export async function GET(req, { params }) {
-//   // Await params first (Fix for Next.js 15)
-//   const resolvedParams = await params;
-//   const id = resolvedParams.id;
-
-//   if (!id) {
-//     return NextResponse.json({ error: "Missing Stream ID" }, { status: 400 });
-//   }
