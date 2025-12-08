@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 const navItems = [
   { href: '/user/dashboard', icon: '📊', label: 'Dashboard' },
   { href: '/user/products', icon: '📦', label: 'Products' },
+  { href: '/user/streams', icon: '📺', label: 'Live Streams' },
 ];
 
 const UserSidebar = ({ sidebarOpen, handleLogout, userName = 'User' }) => {

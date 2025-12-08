@@ -4,18 +4,19 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Calendar, Clock, Eye, ThumbsUp, 
-  ImageOff, ExternalLink, Play // <--- Added Play icon
+  ImageOff, ExternalLink, Play, Bell 
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
-const StreamCard = ({ stream }) => {
+const StreamCard = ({ stream, mode = 'seller' }) => { // <--- Added mode prop
   const router = useRouter();
 
   const isLive = stream.status === 'live';
   const isComplete = stream.status === 'complete';
+  const isUpcoming = stream.status === 'ready' || stream.status === 'testing' || stream.status === 'upcoming';
 
   // Format Date & Time
   const dateObj = new Date(stream.startTime);
@@ -24,22 +25,42 @@ const StreamCard = ({ stream }) => {
 
   // Handle Card Click: Redirect to Internal Detail Page
   const handleCardClick = () => {
+    // Both sellers and viewers can go to the detail page
     router.push(`/stream/${stream.id}`);
   };
 
-  // --- UPDATED: Handle Button Click based on Status ---
+  // --- HANDLE ACTION BUTTON ---
   const handleActionClick = (e) => {
-    e.stopPropagation(); // Prevent card click
+    e.stopPropagation(); 
 
-    if (isComplete) {
-      // If completed: Redirect to Watch on YouTube
-      const watchLink = stream.youtubeLink || `https://www.youtube.com/watch?v=${stream.id}`;
+    const watchLink = stream.youtubeLink || `https://www.youtube.com/watch?v=${stream.id}`;
+    const studioLink = `https://studio.youtube.com/video/${stream.id}/livestreaming`;
+
+    if (mode === 'viewer') {
+      // VIEWERS: Always go to YouTube (to Watch or Set Reminder)
       window.open(watchLink, '_blank');
     } else {
-      // If upcoming/live: Redirect to YouTube Studio to Manage
-      window.open(`https://studio.youtube.com/video/${stream.id}/livestreaming`, '_blank');
+      // SELLERS: Go to Studio if not complete, otherwise Watch
+      if (isComplete) {
+        window.open(watchLink, '_blank');
+      } else {
+        window.open(studioLink, '_blank');
+      }
     }
   };
+
+  // --- DETERMINE ICON ---
+  let ActionIcon = ExternalLink;
+  let actionTitle = "Manage";
+
+  if (mode === 'viewer') {
+    if (isUpcoming) { ActionIcon = Bell; actionTitle = "Set Reminder on YouTube"; }
+    else { ActionIcon = Play; actionTitle = "Watch on YouTube"; }
+  } else {
+    // Seller Mode
+    if (isComplete) { ActionIcon = Play; actionTitle = "Watch Replay"; }
+    else { ActionIcon = ExternalLink; actionTitle = "Manage in Studio"; }
+  }
 
   return (
     <Card
@@ -103,15 +124,14 @@ const StreamCard = ({ stream }) => {
             </span>
           </div>
 
-          {/* --- UPDATED BUTTON --- */}
           <Button 
             variant="ghost" 
             size="icon" 
             className="h-6 w-6 hover:text-foreground"
             onClick={handleActionClick}
-            title={isComplete ? "Watch on YouTube" : "Manage in Studio"} 
+            title={actionTitle}
           >
-            {isComplete ? <Play size={14} /> : <ExternalLink size={14} />}
+            <ActionIcon size={14} />
           </Button>
         </div>
       </CardContent>
