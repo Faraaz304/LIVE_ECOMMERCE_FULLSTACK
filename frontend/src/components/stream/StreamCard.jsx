@@ -11,36 +11,39 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 
-const StreamCard = ({ stream, mode = 'seller' }) => { // <--- Added mode prop
+const StreamCard = ({ stream, mode = 'seller' }) => {
   const router = useRouter();
 
   const isLive = stream.status === 'live';
   const isComplete = stream.status === 'complete';
   const isUpcoming = stream.status === 'ready' || stream.status === 'testing' || stream.status === 'upcoming';
-
+  
   // Format Date & Time
   const dateObj = new Date(stream.startTime);
   const dateStr = dateObj.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
   const timeStr = dateObj.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
 
-  // Handle Card Click: Redirect to Internal Detail Page
+  // --- HANDLE CARD CLICK ---
   const handleCardClick = () => {
-    // Both sellers and viewers can go to the detail page
-    router.push(`/seller/streams/${stream.id}`);
+    // UPDATED: Only redirect if it is the Seller
+    if (mode === 'seller') {
+      router.push(`/seller/streams/${stream.id}`);
+    }
+    // If mode is 'viewer', do nothing.
   };
 
   // --- HANDLE ACTION BUTTON ---
   const handleActionClick = (e) => {
-    e.stopPropagation(); 
+    e.stopPropagation(); // Prevent bubbling
 
     const watchLink = stream.youtubeLink || `https://www.youtube.com/watch?v=${stream.id}`;
     const studioLink = `https://studio.youtube.com/video/${stream.id}/livestreaming`;
 
     if (mode === 'viewer') {
-      // VIEWERS: Always go to YouTube (to Watch or Set Reminder)
+      // VIEWERS: Always go to YouTube
       window.open(watchLink, '_blank');
     } else {
-      // SELLERS: Go to Studio if not complete, otherwise Watch
+      // SELLERS: Go to Studio or Watch
       if (isComplete) {
         window.open(watchLink, '_blank');
       } else {
@@ -57,14 +60,19 @@ const StreamCard = ({ stream, mode = 'seller' }) => { // <--- Added mode prop
     if (isUpcoming) { ActionIcon = Bell; actionTitle = "Set Reminder on YouTube"; }
     else { ActionIcon = Play; actionTitle = "Watch on YouTube"; }
   } else {
-    // Seller Mode
     if (isComplete) { ActionIcon = Play; actionTitle = "Watch Replay"; }
     else { ActionIcon = ExternalLink; actionTitle = "Manage in Studio"; }
   }
 
   return (
     <Card
-      className="group overflow-hidden border-border bg-card text-card-foreground hover:shadow-lg hover:border-primary/50 transition-all duration-300 cursor-pointer flex flex-col h-full"
+      className={cn(
+        "group overflow-hidden border-border bg-card text-card-foreground transition-all duration-300 flex flex-col h-full",
+        // UPDATED: Only show pointer and hover effects for Seller
+        mode === 'seller' 
+          ? "cursor-pointer hover:shadow-lg hover:border-primary/50" 
+          : "cursor-default" 
+      )}
       onClick={handleCardClick}
     >
       {/* Image Section */}
@@ -73,7 +81,11 @@ const StreamCard = ({ stream, mode = 'seller' }) => { // <--- Added mode prop
           <img
             src={stream.thumbnail}
             alt={stream.title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            className={cn(
+              "w-full h-full object-cover transition-transform duration-500",
+              // Only zoom on hover if seller
+              mode === 'seller' && "group-hover:scale-110"
+            )}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-muted-foreground/30">
@@ -93,7 +105,7 @@ const StreamCard = ({ stream, mode = 'seller' }) => { // <--- Added mode prop
           </Badge>
         </div>
 
-        {/* Duration Badge (Only for completed) */}
+        {/* Duration Badge */}
         {isComplete && stream.duration && (
           <div className="absolute bottom-2 right-2 bg-black/80 text-white text-[10px] px-1.5 py-0.5 rounded">
             {stream.duration}
@@ -104,7 +116,10 @@ const StreamCard = ({ stream, mode = 'seller' }) => { // <--- Added mode prop
       <CardContent className="p-4 flex flex-col flex-grow">
         {/* Title & Date */}
         <div className="mb-3 space-y-1">
-          <h3 className="font-semibold text-foreground line-clamp-2 leading-tight group-hover:text-primary transition-colors">
+          <h3 className={cn(
+            "font-semibold text-foreground line-clamp-2 leading-tight transition-colors",
+            mode === 'seller' && "group-hover:text-primary"
+          )}>
             {stream.title}
           </h3>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -127,7 +142,7 @@ const StreamCard = ({ stream, mode = 'seller' }) => { // <--- Added mode prop
           <Button 
             variant="ghost" 
             size="icon" 
-            className="h-6 w-6 hover:text-foreground"
+            className="h-6 w-6 hover:text-foreground cursor-pointer" // Button is always clickable
             onClick={handleActionClick}
             title={actionTitle}
           >
