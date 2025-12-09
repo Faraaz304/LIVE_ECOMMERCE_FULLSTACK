@@ -6,78 +6,62 @@ import { Radio, Video, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-// Import the other two components
+// Import Custom Hook
+import { useStream } from '@/hooks/useStream';
+
+// Import Components
 import CreateStreamModal from './CreateStreamModal';
 import StreamCard from './StreamCard';
 
 const DashboardContent = () => {
-  const { data: session } = useSession(); 
+  const { data: session } = useSession();
+  
+  // --- USE HOOK ---
+  const { 
+    streams,       // The array of streams
+    loading,       // General loading state
+    getStreams,    // Function to fetch list
+    createStream   // Function to create stream
+  } = useStream();
 
   // UI State
-  const [streams, setStreams] = useState([]); 
-  const [isLoadingStreams, setIsLoadingStreams] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  
-  // Tab State: 'upcoming' (includes ready, testing, live) OR 'past' (complete)
   const [activeTab, setActiveTab] = useState('upcoming'); 
 
-  // --- API: Fetch Streams (GET) ---
-  const fetchStreams = async () => {
-    if(!session) return;
-    setIsLoadingStreams(true);
-    try {
-      const res = await fetch('/api/youtube/streams'); 
-      if (!res.ok) throw new Error(`Server error: ${res.status}`);
-      const data = await res.json();
-      if (data.streams) {
-        setStreams(data.streams);
-      }
-    } catch (error) {
-      console.error("Failed to fetch streams:", error);
-    } finally {
-      setIsLoadingStreams(false);
-    }
-  };
-
+  // 1. Fetch Streams on Session Load
   useEffect(() => {
-    if(session) fetchStreams();
-  }, [session]);
+    if (session) {
+      getStreams();
+    }
+  }, [session, getStreams]);
 
-  // --- API: Create Stream (POST) ---
-  // Updated to accept an object containing title and description
-  const handleCreateConfirm = async ({ title, description }) => {
-    setIsCreating(true);
-    try {
-      const res = await fetch('/api/youtube/streams', { 
-        method: 'POST', 
-        headers: { 'Content-Type': 'application/json' },
-        // Send Title, Description AND Location
-        body: JSON.stringify({ title, description, location }) 
-      });
+  // 2. Handle Creation via Hook
+  const handleCreateConfirm = async ({ title, description, location }) => {
+    // createStream handles the API call and error setting internally
+    // It returns the data object if successful, or null if failed
+    const result = await createStream({ title, description, location });
 
-      const data = await res.json();
-
-      if (data.success) {
-        setIsCreateOpen(false); 
-        const youtubeStudioUrl = `https://studio.youtube.com/video/${data.broadcastId}/livestreaming`;
-        window.open(youtubeStudioUrl, '_blank');
-        fetchStreams(); // Refresh list
-      } else {
-        alert("Error creating stream: " + (data.error || "Unknown error"));
-      }
-    } catch (error) {
-      console.error("Creation error", error);
-      alert("Failed to connect to server");
-    } finally {
-      setIsCreating(false);
+    if (result && result.success) {
+      setIsCreateOpen(false);
+      
+      // Open YouTube Studio in new tab
+      const youtubeStudioUrl = `https://studio.youtube.com/video/${result.broadcastId}/livestreaming`;
+      window.open(youtubeStudioUrl, '_blank');
+      
+      // Refresh the list to show the new stream
+      getStreams();
     }
   };
 
   // --- Filter Logic ---
-  const filteredStreams = streams.filter(stream => {
+  // Ensure 'streams' is an array before filtering
+  const safeStreams = Array.isArray(streams) ? streams : [];
+  
+  const filteredStreams = safeStreams.filter(stream => {
+    // Note: Adjust these status strings based on exactly what your API returns
+    // YouTube API statuses: 'upcoming', 'live', 'complete', 'ready', 'testing'
     if (activeTab === 'upcoming') {
-      return ['ready', 'testing', 'live'].includes(stream.status);
+      return ['ready', 'testing', 'live', 'upcoming'].includes(stream.status);
     } else {
       return stream.status === 'complete';
     }
@@ -89,7 +73,7 @@ const DashboardContent = () => {
         isOpen={isCreateOpen} 
         onClose={() => setIsCreateOpen(false)} 
         onConfirm={handleCreateConfirm}
-        isLoading={isCreating}
+        isLoading={loading} // Pass hook loading state
       />
       
       <div className="max-w-7xl mx-auto space-y-8">
@@ -151,21 +135,23 @@ const DashboardContent = () => {
             </button>
           </div>
 
-          <Button variant="ghost" size="sm" onClick={fetchStreams}>
-             {isLoadingStreams ? <Loader2 className="animate-spin h-4 w-4 mr-2"/> : <Radio className="h-4 w-4 mr-2"/>}
+          <Button variant="ghost" size="sm" onClick={getStreams} disabled={loading}>
+             {loading ? <Loader2 className="animate-spin h-4 w-4 mr-2"/> : <Radio className="h-4 w-4 mr-2"/>}
              Refresh Data
           </Button>
         </div>
 
         {/* Stream Grid (Cards) */}
         <div>
-           {isLoadingStreams ? (
+           {loading && streams.length === 0 ? (
+             // Show skeletons if loading and no data yet
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {[1,2,3,4].map(i => (
                   <div key={i} className="h-64 rounded-xl bg-muted animate-pulse border border-border"></div>
                 ))}
              </div>
            ) : filteredStreams.length === 0 ? (
+             // Empty State
              <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-border rounded-xl bg-muted/10">
                <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
                  <Video className="text-muted-foreground h-8 w-8" />
@@ -178,9 +164,10 @@ const DashboardContent = () => {
                </p>
              </div>
            ) : (
+             // List State
              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                {filteredStreams.map((stream) => (
-                 <StreamCard key={stream.id} stream={stream} />
+                 <StreamCard key={stream.id} stream={stream} mode="seller" />
                ))}
              </div>
            )}

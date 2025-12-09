@@ -1,12 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { SessionProvider, useSession } from 'next-auth/react';
+import { SessionProvider } from 'next-auth/react';
 import { 
-  ArrowLeft, Calendar, Clock, Eye, ThumbsUp, 
+  ArrowLeft, Clock, Eye, ThumbsUp, 
   MessageCircle, Users, ExternalLink, Loader2, Share2 
 } from 'lucide-react';
+
+// Import your custom hook
+import { useStream } from '@/hooks/useStream'; // Adjust path if necessary
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,30 +21,20 @@ const StreamDetailPage = () => {
   const router = useRouter();
   const { id } = params;
   
-  const [stream, setStream] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // --- USE HOOK HERE ---
+  const { 
+    getStreamById, 
+    currentStream: stream, // Alias 'currentStream' to 'stream' to keep JSX same
+    loading, 
+    error 
+  } = useStream();
 
-  // --- Fetch Data ---
+  // --- Fetch Data using Hook ---
   useEffect(() => {
-    const fetchStreamDetails = async () => {
-      try {
-        const res = await fetch(`/api/youtube/streams/${id}`);
-        const data = await res.json();
-        
-        if (data.success) {
-          setStream(data.stream);
-        } else {
-          console.error("Error:", data.error);
-        }
-      } catch (error) {
-        console.error("Fetch error:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (id) fetchStreamDetails();
-  }, [id]);
+    if (id) {
+      getStreamById(id);
+    }
+  }, [id, getStreamById]);
 
   // --- Helper: Date Formatter ---
   const formatDate = (dateString) => {
@@ -57,6 +50,7 @@ const StreamDetailPage = () => {
     return parseInt(num).toLocaleString('en-IN');
   };
 
+  // 1. Loading State
   if (loading) {
     return (
       <div className="h-screen flex flex-col items-center justify-center gap-4 bg-muted/30">
@@ -66,10 +60,15 @@ const StreamDetailPage = () => {
     );
   }
 
-  if (!stream) {
+  // 2. Error or Not Found State
+  if (error || !stream) {
     return (
-      <div className="h-screen flex items-center justify-center bg-muted/30">
-        <p className="text-destructive">Stream not found or error loading data.</p>
+      <div className="h-screen flex flex-col items-center justify-center bg-muted/30 gap-2">
+        <p className="text-destructive text-lg font-medium">Unable to load stream</p>
+        <p className="text-muted-foreground text-sm">{error || "Stream not found"}</p>
+        <Button variant="outline" onClick={() => router.back()} className="mt-4">
+          Go Back
+        </Button>
       </div>
     );
   }
@@ -126,7 +125,7 @@ const StreamDetailPage = () => {
                  "px-3 py-1 text-sm",
                  isLive ? "bg-red-600 animate-pulse" : "bg-secondary text-secondary-foreground"
                )}>
-                 {stream.status.toUpperCase()}
+                 {stream.status ? stream.status.toUpperCase() : "UNKNOWN"}
                </Badge>
                {stream.actualStartTime && (
                  <span className="text-sm text-muted-foreground flex items-center gap-1">
@@ -146,7 +145,7 @@ const StreamDetailPage = () => {
                 <Eye className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{formatNum(stream.analytics.viewCount)}</div>
+                <div className="text-2xl font-bold">{formatNum(stream.analytics?.viewCount || 0)}</div>
                 <p className="text-xs text-muted-foreground">Lifetime views</p>
               </CardContent>
             </Card>
@@ -158,7 +157,7 @@ const StreamDetailPage = () => {
                 <ThumbsUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-blue-600">{formatNum(stream.analytics.likeCount)}</div>
+                <div className="text-2xl font-bold text-blue-600">{formatNum(stream.analytics?.likeCount || 0)}</div>
                 <p className="text-xs text-muted-foreground">User engagement</p>
               </CardContent>
             </Card>
@@ -170,7 +169,7 @@ const StreamDetailPage = () => {
                 <MessageCircle className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{formatNum(stream.analytics.commentCount)}</div>
+                <div className="text-2xl font-bold">{formatNum(stream.analytics?.commentCount || 0)}</div>
                 <p className="text-xs text-muted-foreground">Total comments</p>
               </CardContent>
             </Card>
@@ -183,7 +182,7 @@ const StreamDetailPage = () => {
                   <Users className="h-4 w-4 text-red-600" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-red-600">{formatNum(stream.analytics.concurrentViewers)}</div>
+                  <div className="text-2xl font-bold text-red-600">{formatNum(stream.analytics?.concurrentViewers || 0)}</div>
                   <p className="text-xs text-red-600/80">Watching now</p>
                 </CardContent>
               </Card>
