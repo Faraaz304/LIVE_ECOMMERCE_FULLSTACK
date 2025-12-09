@@ -52,8 +52,8 @@ const DashboardContent = () => {
       const res = await fetch('/api/youtube/streams', { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' },
-        // Send both title and description
-        body: JSON.stringify({ title, description }) 
+        // Send Title, Description AND Location
+        body: JSON.stringify({ title, description, location }) 
       });
 
       const data = await res.json();

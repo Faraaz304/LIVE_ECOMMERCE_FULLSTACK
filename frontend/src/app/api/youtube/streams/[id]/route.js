@@ -19,9 +19,6 @@ const getYoutubeClient = () => {
 
 export async function GET(req, { params }) {
   // ---------------------------------------------------------
-  // 👇 THIS IS THE FIX FOR NEXT.JS 15
-  // You must await params before using it
-  // ---------------------------------------------------------
   const resolvedParams = await params;
   const { id } = resolvedParams;
 

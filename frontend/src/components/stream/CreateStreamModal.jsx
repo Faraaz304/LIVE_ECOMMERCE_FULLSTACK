@@ -1,14 +1,48 @@
 'use client';
 
 import React, { useState } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const CreateStreamModal = ({ isOpen, onClose, onConfirm, isLoading }) => {
   const [title, setTitle] = useState('');
-  const [description, setDescription] = useState(''); // <--- New State
+  const [description, setDescription] = useState('');
+  const [isLocating, setIsLocating] = useState(false); // State for location fetching
   
   if (!isOpen) return null;
+
+  const handleCreateClick = () => {
+    // 1. Check if browser supports Geolocation
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+
+    setIsLocating(true);
+
+    // 2. Get Current Position (The Uber/Swiggy part)
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const lat = position.coords.latitude;
+        const lng = position.coords.longitude;
+        
+        setIsLocating(false);
+
+        // 3. Send Title, Description AND Location to Parent
+        onConfirm({ 
+          title, 
+          description, 
+          location: { lat, lng } 
+        });
+      },
+      (error) => {
+        setIsLocating(false);
+        console.error("Location Error:", error);
+        alert("We need your location to show this stream to nearby users. Please allow location access.");
+      },
+      { enableHighAccuracy: true } // Request precise GPS
+    );
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
@@ -21,7 +55,6 @@ const CreateStreamModal = ({ isOpen, onClose, onConfirm, isLoading }) => {
         </div>
         
         <div className="space-y-3">
-          {/* Title Input */}
           <div className="space-y-1">
             <label className="text-sm font-medium">Stream Title</label>
             <input 
@@ -33,7 +66,6 @@ const CreateStreamModal = ({ isOpen, onClose, onConfirm, isLoading }) => {
             />
           </div>
 
-          {/* Description Input (New) */}
           <div className="space-y-1">
             <label className="text-sm font-medium">Description</label>
             <textarea 
@@ -44,17 +76,26 @@ const CreateStreamModal = ({ isOpen, onClose, onConfirm, isLoading }) => {
             />
           </div>
 
-          <p className="text-xs text-muted-foreground">This will create a scheduled event on your YouTube channel.</p>
+          <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted p-2 rounded">
+            <MapPin size={14} className="text-primary"/>
+            Location will be captured automatically when you create.
+          </div>
         </div>
 
         <div className="flex justify-end gap-3 pt-2">
-          <Button variant="outline" onClick={onClose} disabled={isLoading}>Cancel</Button>
+          <Button variant="outline" onClick={onClose} disabled={isLoading || isLocating}>Cancel</Button>
           <Button 
-            onClick={() => onConfirm({ title, description })} // <--- Pass object
-            disabled={!title || isLoading} 
+            onClick={handleCreateClick} // <--- Call our wrapper function
+            disabled={!title || isLoading || isLocating} 
             className="bg-primary text-primary-foreground"
           >
-            {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Creating...</> : 'Create Stream'}
+            {isLocating ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Locating...</>
+            ) : isLoading ? (
+              <><Loader2 className="mr-2 h-4 w-4 animate-spin"/> Creating...</>
+            ) : (
+              'Create Stream'
+            )}
           </Button>
         </div>
       </div>

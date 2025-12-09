@@ -51,8 +51,9 @@ export async function GET() {
   }
 }
 
+
 // ==================================================================
-// 2. POST METHOD - Create Broadcast + Stream Key + Bind
+// 2. POST METHOD - Create Broadcast + Stream Key + Bind + SAVE LOCATION
 // ==================================================================
 export async function POST(req) {
   try {
@@ -61,17 +62,19 @@ export async function POST(req) {
     // Parse Input
     const body = await req.json();
     const streamTitle = body.title || "Untitled NextJS Stream";
-    const streamDescription = body.description || "Created via API"; // <--- Capture Description
+    const streamDescription = body.description || "Created via API";
+    const userLocation = body.location; // <--- { lat: 19.xxx, lng: 72.xxx }
 
     console.log(`Creating Stream: "${streamTitle}"...`);
+    if(userLocation) console.log(`📍 Location detected: ${userLocation.lat}, ${userLocation.lng}`);
 
-    // --- Step A: Create Broadcast ---
+    // --- Step A: Create Broadcast (YouTube) ---
     const broadcastResponse = await youtube.liveBroadcasts.insert({
       part: "snippet,status,contentDetails",
       resource: {
         snippet: {
           title: streamTitle,
-          description: streamDescription, // <--- Add Description Here
+          description: streamDescription,
           scheduledStartTime: new Date().toISOString(),
         },
         status: {
@@ -86,26 +89,37 @@ export async function POST(req) {
     });
 
     const broadcastId = broadcastResponse.data.id;
-    console.log("✅ Broadcast ID:", broadcastId);
+    
+    // ------------------------------------------------------------------
+    // TODO: SEND TO YOUR SPRINGBOOT / MYSQL DB HERE
+    // ------------------------------------------------------------------
+    // You now have the 'broadcastId' and the 'userLocation'.
+    // You should make a call to your Spring Boot API here to save them.
+    
+    /* 
+    await fetch('http://localhost:8080/api/streams/save', {
+       method: 'POST',
+       headers: { 'Content-Type': 'application/json' },
+       body: JSON.stringify({
+         youtubeId: broadcastId,
+         title: streamTitle,
+         latitude: userLocation.lat,
+         longitude: userLocation.lng
+       })
+    });
+    */
+    // ------------------------------------------------------------------
 
     // --- Step B: Create Stream Key ---
     const streamResponse = await youtube.liveStreams.insert({
       part: "snippet,cdn",
       resource: {
-        snippet: {
-          title: `${streamTitle} - Key`,
-        },
-        cdn: {
-          format: "1080p",
-          ingestionType: "rtmp",
-          resolution: "1080p", 
-          frameRate: "30fps"
-        },
+        snippet: { title: `${streamTitle} - Key` },
+        cdn: { format: "1080p", ingestionType: "rtmp", resolution: "1080p", frameRate: "30fps" },
       },
     });
 
     const streamId = streamResponse.data.id;
-    console.log("✅ Stream ID:", streamId);
 
     // --- Step C: Bind Them Together ---
     await youtube.liveBroadcasts.bind({
@@ -114,28 +128,18 @@ export async function POST(req) {
       streamId: streamId,
     });
 
-    // --- Success Response ---
-    const streamName = streamResponse.data.cdn.ingestionInfo.streamName;
-    const ingestionAddress = streamResponse.data.cdn.ingestionInfo.ingestionAddress;
-
     return NextResponse.json({
       success: true,
       broadcastId: broadcastId,
       youtubeLink: `https://youtu.be/${broadcastId}`,
       streamSettings: {
-        serverUrl: ingestionAddress,
-        streamKey: streamName,
+        serverUrl: streamResponse.data.cdn.ingestionInfo.ingestionAddress,
+        streamKey: streamResponse.data.cdn.ingestionInfo.streamName,
       },
     });
 
   } catch (error) {
     console.error("POST Error:", error.message);
-    return NextResponse.json(
-      { 
-        error: error.message, 
-        details: error.response?.data?.error?.errors || error.response?.data 
-      }, 
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
