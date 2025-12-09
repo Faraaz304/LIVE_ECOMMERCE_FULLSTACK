@@ -45,13 +45,15 @@ const DashboardContent = () => {
   }, [session]);
 
   // --- API: Create Stream (POST) ---
-  const handleCreateConfirm = async (title) => {
+  // Updated to accept an object containing title and description
+  const handleCreateConfirm = async ({ title, description }) => {
     setIsCreating(true);
     try {
       const res = await fetch('/api/youtube/streams', { 
         method: 'POST', 
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: title })
+        // Send both title and description
+        body: JSON.stringify({ title, description }) 
       });
 
       const data = await res.json();
@@ -75,10 +77,8 @@ const DashboardContent = () => {
   // --- Filter Logic ---
   const filteredStreams = streams.filter(stream => {
     if (activeTab === 'upcoming') {
-      // Show Ready, Testing, and Live streams here
       return ['ready', 'testing', 'live'].includes(stream.status);
     } else {
-      // Show Complete streams here
       return stream.status === 'complete';
     }
   });

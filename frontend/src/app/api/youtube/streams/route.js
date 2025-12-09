@@ -27,9 +27,7 @@ export async function GET() {
 
     // Fetch everything associated with the channel (mine: true)
     const response = await youtube.liveBroadcasts.list({
-      part: "snippet,status", // <--- Removed "id" (it comes back automatically)
-      // broadcastStatus: "all",
-      // broadcastType: "all", // <--- REMOVED THIS (Causes the 500 error)
+      part: "snippet,status", 
       mine: true,
       maxResults: 20,
     });
@@ -38,7 +36,7 @@ export async function GET() {
 
     // Format for Frontend
     const streams = items.map((item) => ({
-      id: item.id, // <--- This will still work!
+      id: item.id, 
       title: item.snippet.title,
       thumbnail: item.snippet.thumbnails?.medium?.url || item.snippet.thumbnails?.default?.url || "",
       status: item.status.lifeCycleStatus, 
@@ -48,7 +46,6 @@ export async function GET() {
     return NextResponse.json({ streams });
 
   } catch (error) {
-    // Log the FULL error object to see the real cause in your terminal
     console.error("GET Error Details:", error.response?.data || error.message);
     return NextResponse.json({ streams: [], error: error.message }, { status: 500 });
   }
@@ -64,6 +61,7 @@ export async function POST(req) {
     // Parse Input
     const body = await req.json();
     const streamTitle = body.title || "Untitled NextJS Stream";
+    const streamDescription = body.description || "Created via API"; // <--- Capture Description
 
     console.log(`Creating Stream: "${streamTitle}"...`);
 
@@ -73,11 +71,11 @@ export async function POST(req) {
       resource: {
         snippet: {
           title: streamTitle,
-          description: "Created via API",
+          description: streamDescription, // <--- Add Description Here
           scheduledStartTime: new Date().toISOString(),
         },
         status: {
-          privacyStatus: "unlisted", // Change to 'public' if needed
+          privacyStatus: "unlisted", 
           selfDeclaredMadeForKids: false,
         },
         contentDetails: {
@@ -141,4 +139,3 @@ export async function POST(req) {
     );
   }
 }
-

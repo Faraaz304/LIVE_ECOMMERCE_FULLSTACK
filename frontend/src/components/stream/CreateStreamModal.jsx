@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 
 const CreateStreamModal = ({ isOpen, onClose, onConfirm, isLoading }) => {
   const [title, setTitle] = useState('');
+  const [description, setDescription] = useState(''); // <--- New State
   
   if (!isOpen) return null;
 
@@ -19,22 +20,37 @@ const CreateStreamModal = ({ isOpen, onClose, onConfirm, isLoading }) => {
           </button>
         </div>
         
-        <div className="space-y-2">
-          <label className="text-sm font-medium">Stream Title</label>
-          <input 
-            type="text" 
-            placeholder="e.g., Summer Sale Launch"
-            className="w-full px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
+        <div className="space-y-3">
+          {/* Title Input */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Stream Title</label>
+            <input 
+              type="text" 
+              placeholder="e.g., Summer Sale Launch"
+              className="w-full px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </div>
+
+          {/* Description Input (New) */}
+          <div className="space-y-1">
+            <label className="text-sm font-medium">Description</label>
+            <textarea 
+              placeholder="Describe your event..."
+              className="w-full px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary min-h-[80px] resize-none"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+
           <p className="text-xs text-muted-foreground">This will create a scheduled event on your YouTube channel.</p>
         </div>
 
         <div className="flex justify-end gap-3 pt-2">
           <Button variant="outline" onClick={onClose} disabled={isLoading}>Cancel</Button>
           <Button 
-            onClick={() => onConfirm(title)} 
+            onClick={() => onConfirm({ title, description })} // <--- Pass object
             disabled={!title || isLoading} 
             className="bg-primary text-primary-foreground"
           >
